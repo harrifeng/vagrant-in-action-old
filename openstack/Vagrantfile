@@ -1,8 +1,9 @@
 # we use array here, becasue we may want to input more parameters later
 hosts = {
-  '01-controller' => [200],
-  '02-network' => [201],
-  '03-compute' => [202]
+  '00-controller' => [200]
+  # '01-controller' => [200],
+  # '02-network' => [201],
+  # '03-compute' => [202]
 }
 
 Vagrant.configure('2') do |config|
