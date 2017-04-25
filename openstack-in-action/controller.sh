@@ -2,6 +2,11 @@ sudo apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install rabbitmq-server \
      python-mysqldb \
      keystone \
+     glance \
+     glance-api \
+     glance-registry \
+     glance-common \
+     python-glanceclient \
      mysql-server
 sudo rabbitmqctl change_password guest openstack1
 echo 'rabbitmq status------------------->'
