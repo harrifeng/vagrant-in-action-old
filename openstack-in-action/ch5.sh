@@ -70,7 +70,7 @@ keystone tenant-create --name=service  --description="Service Tenant"
 
 echo '--------------------------------'
 keystone user-create --name=admin \
-         --pass=openstack2 \
+         --pass=openstack1 \
          --email=admin@testco.com
 
 echo '--------------------------------'
@@ -90,7 +90,7 @@ mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON glance.* TO 'glance_
 
 echo '--------------------------------'
 keystone user-create --name=glance \
-         --pass="openstack3" \
+         --pass="openstack1" \
          --email=glance@testco.com
 
 echo '--------------------------------'
@@ -138,7 +138,7 @@ sudo glance-manage db_sync
 
 
 
-glance --os-username=admin --os-password openstack2 \
+glance --os-username=admin --os-password openstack1 \
        --os-tenant-name=admin \
        --os-auth-url=http://10.33.2.50:5000/v2.0  \
        image-create \
@@ -159,7 +159,7 @@ mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON cinder.* TO 'cinder_
 
 echo "--------------------------------"
 keystone user-create --name=cinder \
-         --pass="openstack4" \
+         --pass="openstack1" \
          --email=cinder@testco.com
 
 echo "--------------------------------"
@@ -191,7 +191,7 @@ connection = mysql://cinder_dbu:openstack1@localhost/cinder
 [keystone_authtoken]
 auth_uri = http://192.168.2.50:35357
 admin_tenant_name = service
-admin_password = openstack4
+admin_password = openstack1
 auth_protocol = http
 admin_user = cinder " | sudo tee -a ${CINDER_CONF}
 
@@ -209,7 +209,7 @@ mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON neutron.* TO 'neutro
 mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON neutron.* TO 'neutron_dbu'@'%' IDENTIFIED BY '$MYSQL_OPENSTACK_PASS_1';"
 
 keystone user-create --name=neutron \
-         --pass="openstack5" \
+         --pass="openstack1" \
          --email=neutron@testco.com
 
 
@@ -280,7 +280,7 @@ mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON nova.* TO 'nova_dbu'
 
 echo "--------------------------------"
 keystone user-create --name=nova \
-         --pass="openstack6" \
+         --pass="openstack1" \
          --email=nova@testco.com
 
 echo "--------------------------------"
@@ -316,13 +316,13 @@ vncserver_listen = 0.0.0.0
 vncserver_proxyclient_address = 0.0.0.0
 auth_strategy=keystone
 service_neutron_metadata_proxy = true
-neutron_metadata_proxy_shared_secret = openstack6
+neutron_metadata_proxy_shared_secret = openstack1
 network_api_class = nova.network.neutronv2.api.API
 neutron_url = http://192.168.2.50:9696
 neutron_auth_strategy = keystone
 neutron_admin_tenant_name = service
 neutron_admin_username = neutron
-neutron_admin_password = openstack6
+neutron_admin_password = openstack1
 neutron_admin_auth_url =  http://192.168.2.50:35357/v2.0
 linuxnet_interface_driver = nova.network.linux_net.LinuxOVSInterfaceDriver
 firewall_driver = nova.virt.firewall.NoopFirewallDriver
@@ -332,7 +332,7 @@ connection = mysql://nova_dbu:openstack1@localhost/nova
 [keystone_authtoken]
 auth_uri = http://192.168.2.50:35357
 admin_tenant_name = service
-admin_password = openstack2
+admin_password = openstack1
 auth_protocol = http
 admin_user = nova" |  sudo tee -a ${NOVA_CONF}
 
