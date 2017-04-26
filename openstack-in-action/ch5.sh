@@ -25,59 +25,94 @@ sudo service mysql status
 # section 5.2 #
 ###############
 MYSQL_ROOT_PASS=rootpass
-MYSQL_KEYSTONE_PASS=openstack1
+MYSQL_OPENSTACK_PASS_1=openstack1
 
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install keystone
+mysql -uroot -p$MYSQL_ROOT_PASS -e 'DROP DATABASE IF EXISTS keystone;'
 mysql -uroot -p$MYSQL_ROOT_PASS -e 'CREATE DATABASE keystone;'
-mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON keystone.* TO 'keystone_dbu'@'localhost' IDENTIFIED BY '$MYSQL_KEYSTONE_PASS';"
-mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON keystone.* TO 'keystone_dbu'@'%' IDENTIFIED BY '$MYSQL_KEYSTONE_PASS';"
+mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON keystone.* TO 'keystone_dbu'@'localhost' IDENTIFIED BY '$MYSQL_OPENSTACK_PASS_1';"
+mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON keystone.* TO 'keystone_dbu'@'%' IDENTIFIED BY '$MYSQL_OPENSTACK_PASS_1';"
 
 KEYSTONE_CONF=/etc/keystone/keystone.conf
 sudo sed -i "s#^connection.*#connection = mysql://keystone_dbu:openstack1@localhost:3306/keystone#" ${KEYSTONE_CONF}
-# sudo sed -i 's/^#admin_token.*/admin_token = ADMIN/' ${KEYSTONE_CONF}
+sudo sed -i 's/^#admin_token.*/admin_token = ADMIN/' ${KEYSTONE_CONF}
 sudo sed -i 's,^#log_dir.*,log_dir = /var/log/keystone,' ${KEYSTONE_CONF}
 sudo service keystone restart
 
-keystone-manage bootstrap \
-    --bootstrap-password s3cr3t \
-    --bootstrap-username admin \
-    --bootstrap-project-name admin \
-    --bootstrap-role-name admin \
-    --bootstrap-service-name keystone \
-    --bootstrap-region-id RegionOne \
-    --bootstrap-admin-url http://localhost:35357 \
-    --bootstrap-public-url http://localhost:5000 \
-    --bootstrap-internal-url http://localhost:5000
-# sudo keystone-manage db_sync
+sudo keystone-manage db_sync
 
 
-#     glance \
-#     glance-api \
-#     glance-registry \
-#     glance-common \
-#     python-glanceclient \
-#     cinder-api \
-#     cinder-scheduler \
-#     neutron-server \
-#     nova-api \
-#     nova-cert \
-#     nova-conductor \
-#     nova-consoleauth \
-#     nova-novncproxy \
-#     nova-scheduler \
-#     python-novaclient \
-#     openstack-dashboard \
-#     memcached \
-#     python-memcache \
-#     mysql-server
-# # Optionally, you can remove the Ubuntu theme, which has been reported to cause problems with some modules:
-# sudo apt-get -y remove --purge openstack-dashboard-ubuntu-theme
-# sudo rabbitmqctl change_password guest openstack1
-# echo 'rabbitmq status------------------->'
-# sudo rabbitmqctl status
-# sudo sed -i "s/^bind\-address.*/bind-address = 0.0.0.0/g" /etc/mysql/my.cnf
-# sudo service mysql restart
-# echo 'mysql status---------------------->'
-# sudo service mysql status
-# echo 'keystone status---------------------->'
-# id keystone
+# Host address
+HOST_IP=192.168.2.50 #The Management Address
+# Keystone definitions
+KEYSTONE_REGION=RegionOne
+ADMIN_PASSWORD=admin_pass
+SERVICE_PASSWORD=service_pass
+export SERVICE_TOKEN="ADMIN"
+export SERVICE_ENDPOINT="http://192.168.2.50:35357/v2.0"
+SERVICE_TENANT_NAME=service
+
+keystone discover
+echo '--------------------------------'
+keystone service-create --name=keystone --type=identity --description="Identity Service"
+keystone endpoint-create \
+         --region RegionOne \
+         --service=keystone \
+         --publicurl=http://10.33.2.50:5000/v2.0 \
+         --internalurl=http://192.168.2.50:5000/v2.0 \
+         --adminurl=http://192.168.2.50:35357/v2.0
+
+echo '--------------------------------'
+keystone tenant-create --name=admin --description "Admin Tenant"
+
+echo '--------------------------------'
+keystone tenant-create --name=service  --description="Service Tenant"
+
+echo '--------------------------------'
+keystone user-create --name=admin \
+         --pass=openstack2 \
+         --email=admin@testco.com
+
+echo '--------------------------------'
+keystone role-create --name=admin
+
+echo '--------------------------------'
+keystone role-create --name=Member
+
+echo '--------------------------------'
+keystone user-role-add --user=admin --role=admin --tenant=admin
+
+
+mysql -uroot -p$MYSQL_ROOT_PASS -e 'DROP DATABASE IF EXISTS glance;'
+mysql -uroot -p$MYSQL_ROOT_PASS -e 'CREATE DATABASE glance;'
+mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON glance.* TO 'glance_dbu'@'localhost' IDENTIFIED BY '$MYSQL_OPENSTACK_PASS_1';"
+mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON glance.* TO 'glance_dbu'@'%' IDENTIFIED BY '$MYSQL_OPENSTACK_PASS_1';"
+
+echo '--------------------------------'
+keystone user-create --name=glance \
+         --pass="openstack3" \
+         --email=glance@testco.com
+
+echo '--------------------------------'
+keystone user-role-add --user=glance --role-id=admin --tenant=service
+
+echo '--------------------------------'
+keystone service-create --name=glance --type=image --description="Image Service"
+
+echo '--------------------------------'
+keystone endpoint-create \
+         --region RegionOne \
+         --service=glance \
+         --publicurl=http://10.33.2.50:9292 \
+         --internalurl=http://192.168.2.50:9292 \
+         --adminurl=http://192.168.2.50:9292
+
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install \
+     glance \
+     glance-api \
+     glance-registry \
+     python-glanceclient \
+     glance-common
+
+
+# sudo glance-manage db_sync
