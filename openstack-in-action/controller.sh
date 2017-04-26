@@ -7,6 +7,16 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get -y install rabbitmq-server \
      glance-registry \
      glance-common \
      python-glanceclient \
+     cinder-api \
+     cinder-scheduler \
+     neutron-server \
+     nova-api \
+     nova-cert \
+     nova-conductor \
+     nova-consoleauth \
+     nova-novncproxy \
+     nova-scheduler \
+     python-novaclient \
      mysql-server
 sudo rabbitmqctl change_password guest openstack1
 echo 'rabbitmq status------------------->'
