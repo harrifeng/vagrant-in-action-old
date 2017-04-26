@@ -17,7 +17,12 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get -y install rabbitmq-server \
      nova-novncproxy \
      nova-scheduler \
      python-novaclient \
+     openstack-dashboard \
+     memcached \
+     python-memcache \
      mysql-server
+# Optionally, you can remove the Ubuntu theme, which has been reported to cause problems with some modules:
+sudo apt-get -y remove --purge openstack-dashboard-ubuntu-theme
 sudo rabbitmqctl change_password guest openstack1
 echo 'rabbitmq status------------------->'
 sudo rabbitmqctl status
