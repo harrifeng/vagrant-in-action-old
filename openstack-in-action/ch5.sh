@@ -151,3 +151,50 @@ glance --os-username=admin --os-password openstack2 \
 ###############
 # section 5.3 #
 ###############
+
+mysql -uroot -p$MYSQL_ROOT_PASS -e 'DROP DATABASE IF EXISTS cinder;'
+mysql -uroot -p$MYSQL_ROOT_PASS -e 'CREATE DATABASE cinder DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;'
+mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON cinder.* TO 'cinder_dbu'@'localhost' IDENTIFIED BY '$MYSQL_OPENSTACK_PASS_1';"
+mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON cinder.* TO 'cinder_dbu'@'%' IDENTIFIED BY '$MYSQL_OPENSTACK_PASS_1';"
+
+echo "--------------------------------"
+keystone user-create --name=cinder \
+         --pass="openstack4" \
+         --email=cinder@testco.com
+
+echo "--------------------------------"
+keystone user-role-add --user=cinder --role-id=admin --tenant=service
+
+echo "--------------------------------"
+keystone service-create --name=cinder --type=volume  --description="Block Storage"
+
+echo "--------------------------------"
+
+keystone endpoint-create \
+  --region RegionOne \
+  --service=cinder \
+  --publicurl=http://10.33.2.50:8776/v1/%\(tenant_id\)s \
+  --internalurl=http://192.168.0.50:8776/v1/%\(tenant_id\)s \
+  --adminurl=http://192.168.0.50:8776/v1/%\(tenant_id\)s
+
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install cinder-api cinder-scheduler
+
+CINDER_CONF=/etc/cinder/cinder.conf
+
+echo "
+[DEFAULT]
+rpc_backend = rabbit
+rabbit_host = 192.168.2.50
+rabbit_password = guest
+[database]
+connection = mysql://cinder_dbu:openstack1@localhost/cinder
+[keystone_authtoken]
+auth_uri = http://192.168.2.50:35357
+admin_tenant_name = service
+admin_password = openstack4
+auth_protocol = http
+admin_user = cinder " | sudo tee -a ${CINDER_CONF}
+
+sudo service cinder-scheduler restart
+sudo service cinder-api restart
+sudo cinder-manage db sync
