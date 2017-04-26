@@ -135,3 +135,19 @@ mysqla-sql_mode = TRADITIONAL" | sudo tee -a ${GLANCE_REGISTRY_CONF}
 sudo service glance-api restart
 sudo service glance-registry restart
 sudo glance-manage db_sync
+
+
+
+glance --os-username=admin --os-password openstack2 \
+       --os-tenant-name=admin \
+       --os-auth-url=http://10.33.2.50:5000/v2.0  \
+       image-create \
+       --name="Cirros 0.3.2" \
+       --is-public=true \
+       --disk-format=qcow2 \
+       --container-format=bare \
+       --file /vagrant/cirros-0.3.2-x86_64-disk.img
+
+###############
+# section 5.3 #
+###############
