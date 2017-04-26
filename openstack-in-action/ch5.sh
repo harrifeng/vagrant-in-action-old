@@ -171,11 +171,11 @@ keystone service-create --name=cinder --type=volume  --description="Block Storag
 echo "--------------------------------"
 
 keystone endpoint-create \
-  --region RegionOne \
-  --service=cinder \
-  --publicurl=http://10.33.2.50:8776/v1/%\(tenant_id\)s \
-  --internalurl=http://192.168.0.50:8776/v1/%\(tenant_id\)s \
-  --adminurl=http://192.168.0.50:8776/v1/%\(tenant_id\)s
+         --region RegionOne \
+         --service=cinder \
+         --publicurl=http://10.33.2.50:8776/v1/%\(tenant_id\)s \
+         --internalurl=http://192.168.0.50:8776/v1/%\(tenant_id\)s \
+         --adminurl=http://192.168.0.50:8776/v1/%\(tenant_id\)s
 
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install cinder-api cinder-scheduler
 
@@ -198,3 +198,77 @@ admin_user = cinder " | sudo tee -a ${CINDER_CONF}
 sudo service cinder-scheduler restart
 sudo service cinder-api restart
 sudo cinder-manage db sync
+
+###############
+# section 5.4 #
+###############
+
+mysql -uroot -p$MYSQL_ROOT_PASS -e 'DROP DATABASE IF EXISTS neutron;'
+mysql -uroot -p$MYSQL_ROOT_PASS -e 'CREATE DATABASE neutron DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;'
+mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON neutron.* TO 'neutron_dbu'@'localhost' IDENTIFIED BY '$MYSQL_OPENSTACK_PASS_1';"
+mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON neutron.* TO 'neutron_dbu'@'%' IDENTIFIED BY '$MYSQL_OPENSTACK_PASS_1';"
+
+keystone user-create --name=neutron \
+         --pass="openstack5" \
+         --email=neutron@testco.com
+
+
+keystone user-role-add \
+         --user=neutron \
+         --role=admin \
+         --tenant=service
+
+keystone service-create --name=neutron --type=network  --description="OpenStack Networking Service"
+
+keystone endpoint-create \
+         --region RegionOne \
+         --service=neutron \
+         --publicurl=http://10.33.2.50:9696 \
+         --internalurl=http://192.168.2.50:9696 \
+         --adminurl=http://192.168.2.50:9696
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install neutron-server
+
+SERVICE_TENANT_ID=$(keystone  tenant-list | awk '/\ service\ / {print $2}')
+NEUTRON_CONF=/etc/neutron/neutron.conf
+
+echo "
+[DEFAULT]
+core_plugin = neutron.plugins.ml2.plugin.Ml2Plugin
+service_plugins = router,firewall,lbaas,vpnaas,metering
+allow_overlapping_ips = True
+
+nova_url = http://192.168.2.50:8774/v2
+nova_admin_username = admin
+nova_admin_password = openstack1
+nova_admin_tenant_id = ${SERVICE_TENANT_ID}
+nova_admin_auth_url = http://10.33.2.50:35357/v2.0
+
+[keystone_authtoken]
+auth_uri = http://10.33.2.50:5000
+auth_protocol = http
+admin_tenant_name = service
+admin_user = neutron
+admin_password = openstack1
+
+[database]
+connection = mysql://neutron_dbu:openstack1@localhost/neutron " |  sudo tee -a ${NEUTRON_CONF}
+
+
+ML2_CONF=/etc/neutron/plugins/ml2/ml2_conf.ini
+
+echo "
+[ml2]
+type_drivers = gre
+tenant_network_types = gre
+mechanism_drivers = openvswitch
+[ml2_type_gre]
+tunnel_id_ranges = 1:1000
+[securitygroup]
+firewall_driver =
+neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver enable_security_group = True" | sudo tee -a ${ML2_TYPE_GRE}
+
+sudo service neutron-server restart
+
+###############
+# section 5.5 #
+###############
