@@ -84,7 +84,7 @@ keystone user-role-add --user=admin --role=admin --tenant=admin
 
 
 mysql -uroot -p$MYSQL_ROOT_PASS -e 'DROP DATABASE IF EXISTS glance;'
-mysql -uroot -p$MYSQL_ROOT_PASS -e 'CREATE DATABASE glance;'
+mysql -uroot -p$MYSQL_ROOT_PASS -e 'CREATE DATABASE glance DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;'
 mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON glance.* TO 'glance_dbu'@'localhost' IDENTIFIED BY '$MYSQL_OPENSTACK_PASS_1';"
 mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON glance.* TO 'glance_dbu'@'%' IDENTIFIED BY '$MYSQL_OPENSTACK_PASS_1';"
 
@@ -114,5 +114,24 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get -y install \
      python-glanceclient \
      glance-common
 
+GLANCE_API_CONF=/etc/glance/glance-api.conf
+echo "
+[DEFAULT]
+rpc_backend = rabbit
+rabbit_host = 192.168.2.50
+rabbit_password = guest
 
-# sudo glance-manage db_sync
+[database]
+connection = mysql://glance_dbu:openstack1@localhost:3306/glance
+mysqla-sql_mode = TRADITIONAL" | sudo tee -a ${GLANCE_API_CONF}
+
+
+GLANCE_REGISTRY_CONF=/etc/glance/glance-registry.conf
+echo "
+[database]
+connection = mysql://glance_dbu:openstack1@localhost:3306/glance
+mysqla-sql_mode = TRADITIONAL" | sudo tee -a ${GLANCE_REGISTRY_CONF}
+
+sudo service glance-api restart
+sudo service glance-registry restart
+sudo glance-manage db_sync
