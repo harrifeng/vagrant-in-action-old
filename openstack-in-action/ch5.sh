@@ -272,3 +272,74 @@ sudo service neutron-server restart
 ###############
 # section 5.5 #
 ###############
+
+mysql -uroot -p$MYSQL_ROOT_PASS -e 'DROP DATABASE IF EXISTS nova;'
+mysql -uroot -p$MYSQL_ROOT_PASS -e 'CREATE DATABASE nova DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;'
+mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON nova.* TO 'nova_dbu'@'localhost' IDENTIFIED BY '$MYSQL_OPENSTACK_PASS_1';"
+mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON nova.* TO 'nova_dbu'@'%' IDENTIFIED BY '$MYSQL_OPENSTACK_PASS_1';"
+
+echo "--------------------------------"
+keystone user-create --name=nova \
+         --pass="openstack6" \
+         --email=nova@testco.com
+
+echo "--------------------------------"
+keystone user-role-add --user=nova --role=admin --tenant=service
+
+echo "--------------------------------"
+keystone service-create --name=nova --type=compute  --description="OpenStack Compute Service"
+
+echo "--------------------------------"
+keystone endpoint-create --region RegionOne \
+         --service=nova \
+         --publicurl='http://10.33.2.50:8774/v2/$(tenant_id)s' \
+         --internalurl='http://192.168.0.50:8774/v2/$(tenant_id)s' \
+         --adminurl='http://192.168.0.50:8774/v2/$(tenant_id)s'
+
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install nova-api \
+     nova-cert \
+     nova-conductor \
+     nova-consoleauth \
+     nova-novncproxy \
+     nova-scheduler \
+     python-novaclient
+
+
+NOVA_CONF=/etc/nova/nova.conf
+
+echo "
+rpc_backend = rabbit
+rabbit_host = 192.168.2.50
+rabbit_password = guest
+my_ip = 192.168.2.50
+vncserver_listen = 0.0.0.0
+vncserver_proxyclient_address = 0.0.0.0
+auth_strategy=keystone
+service_neutron_metadata_proxy = true
+neutron_metadata_proxy_shared_secret = openstack6
+network_api_class = nova.network.neutronv2.api.API
+neutron_url = http://192.168.2.50:9696
+neutron_auth_strategy = keystone
+neutron_admin_tenant_name = service
+neutron_admin_username = neutron
+neutron_admin_password = openstack6
+neutron_admin_auth_url =  http://192.168.2.50:35357/v2.0
+linuxnet_interface_driver = nova.network.linux_net.LinuxOVSInterfaceDriver
+firewall_driver = nova.virt.firewall.NoopFirewallDriver
+security_group_api = neutron
+[database]
+connection = mysql://nova_dbu:openstack1@localhost/nova
+[keystone_authtoken]
+auth_uri = http://192.168.2.50:35357
+admin_tenant_name = service
+admin_password = openstack2
+auth_protocol = http
+admin_user = nova" |  sudo tee -a ${NOVA_CONF}
+
+sudo nova-manage db sync
+
+cd /usr/bin/; for i in $( ls nova-* );  do sudo service $i restart; done
+echo '--------------------------------'
+sudo nova-manage service list
+
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install openstack-dashboard memcached python-memcache
