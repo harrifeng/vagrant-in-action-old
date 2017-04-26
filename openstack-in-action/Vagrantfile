@@ -1,9 +1,9 @@
 # we use array here, becasue we may want to input more parameters later
 hosts = {
-  '50-controller' => [50],
-  '51-network'    => [51],
-  '52-storage'    => [52],
-  '53-compute'    => [53]
+  '50-controller' => [50]
+  # '51-network'    => [51],
+  # '52-storage'    => [52],
+  # '53-compute'    => [53]
 }
 
 Vagrant.configure('2') do |config|

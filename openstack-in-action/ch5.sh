@@ -34,10 +34,21 @@ mysql -uroot -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON keystone.* TO 'keyst
 
 KEYSTONE_CONF=/etc/keystone/keystone.conf
 sudo sed -i "s#^connection.*#connection = mysql://keystone_dbu:openstack1@localhost:3306/keystone#" ${KEYSTONE_CONF}
-sudo sed -i 's/^#admin_token.*/admin_token = ADMIN/' ${KEYSTONE_CONF}
+# sudo sed -i 's/^#admin_token.*/admin_token = ADMIN/' ${KEYSTONE_CONF}
 sudo sed -i 's,^#log_dir.*,log_dir = /var/log/keystone,' ${KEYSTONE_CONF}
 sudo service keystone restart
-sudo keystone-manage db_sync
+
+keystone-manage bootstrap \
+    --bootstrap-password s3cr3t \
+    --bootstrap-username admin \
+    --bootstrap-project-name admin \
+    --bootstrap-role-name admin \
+    --bootstrap-service-name keystone \
+    --bootstrap-region-id RegionOne \
+    --bootstrap-admin-url http://localhost:35357 \
+    --bootstrap-public-url http://localhost:5000 \
+    --bootstrap-internal-url http://localhost:5000
+# sudo keystone-manage db_sync
 
 
 #     glance \
