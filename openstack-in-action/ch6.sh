@@ -125,3 +125,20 @@ nova_metadata_ip = 192.168.2.50
 metadata_proxy_shared_secret = openstack1" | sudo tee -a ${METADATA_CONF}
 
 sudo service neutron-metadata-agent restart
+
+export OS_USERNAME=admin
+export OS_PASSWORD=openstack1
+export OS_TENANT_NAME=admin
+export OS_AUTH_URL=http://10.33.2.50:5000/v2.0
+
+SERVICE_TENANT_ID=$(keystone  tenant-list | awk '/\ service\ / {print $2}')
+neutron net-create --tenant-id=${SERVICE_TENANT_ID} INTERNAL_NETWORK
+
+neutron subnet-create --tenant-id=${SERVICE_TENANT_ID} INTERNAL_NETWORK 172.16.0.0/24
+
+neutron router-create --tenant-id=${SERVICE_TENANT_ID} ADMIN_ROUTER
+
+SUBNET_ID=$(neutron subnet-list | awk '/172/ {print $2}')
+ROUTER_ID=$(neutron router-list | awk '/ADMIN_ROUTER/ {print $2}')
+
+neutron router-interface-add ${ROUTER_ID} ${SUBNET_ID}
