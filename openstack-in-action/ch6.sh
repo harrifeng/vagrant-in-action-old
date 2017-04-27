@@ -12,3 +12,15 @@ net.ipv4.conf.default.rp_filter=0" | sudo tee -a ${SYSCTL_CONF}
 
 # enable the changes
 sudo sysctl -p
+
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install openvswitch-switch
+sudo lsmod | grep openvswitch
+
+# Configure internal OVS bridge
+sudo ovs-vsctl add-br br-int
+
+# Configure external OVS bridge
+sudo ovs-vsctl add-br br-ex
+
+# Show the result
+sudo ovs-vsctl show
