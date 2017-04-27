@@ -343,3 +343,6 @@ echo '--------------------------------'
 sudo nova-manage service list
 
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install openstack-dashboard memcached python-memcache
+
+# remove the Ubuntu theme, which has been reported to cause problems with some modules:
+apt-get -y remove --purge openstack-dashboard-ubuntu-theme
