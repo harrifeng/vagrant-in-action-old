@@ -1,5 +1,13 @@
 # update the package we use mirror 163
-# sudo apt-get update
+sudo apt-get update
+
+# change eth3 to eth3 VM network
+sudo sed -i "s/iface eth3 inet static/iface eth3 inet manual/g" /etc/network/interfaces
+sudo sed -i "s/address 172.16.0.51//g" /etc/network/interfaces
+sudo sed -i "s/netmask 255.255.0.0//g" /etc/network/interfaces
+sudo ifdown eth3 && sudo ifup eth3
+
+ifconfig eth3
 
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y install vlan bridge-utils
 
@@ -24,3 +32,96 @@ sudo ovs-vsctl add-br br-ex
 
 # Show the result
 sudo ovs-vsctl show
+
+# assign eth3 to br-ex
+sudo ovs-vsctl add-port br-ex eth3
+sudo ovs-vsctl br-set-external-id br-ex bridge-id br-ex
+sudo ovs-vsctl show
+
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install neutron-plugin-ml2 \
+     neutron-plugin-openvswitch-agent \
+     neutron-l3-agent \
+     neutron-dhcp-agent
+
+
+SERVICE_TENANT_ID=$(keystone  tenant-list | awk '/\ service\ / {print $2}')
+NEUTRON_CONF=/etc/neutron/neutron.conf
+echo "
+[DEFAULT]
+core_plugin = neutron.plugins.ml2.plugin.Ml2Plugin
+service_plugins = router,firewall,lbaas,vpnaas,metering
+allow_overlapping_ips = True
+
+verbose = True
+auth_strategy = keystone
+rpc_backend = neutron.openstack.common.rpc.impl_kombu
+rabbit_host = 192.168.2.50
+rabbit_password = guest
+
+nova_url = http://127.0.0.1:8774/v2
+nova_admin_username = admin
+nova_admin_password = openstack1
+nova_admin_tenant_id = ${SERVICE_TENANT_ID}
+nova_admin_auth_url = http://10.33.2.50:35357/v2.0
+
+[keystone_authtoken]
+auth_url =  http://10.33.2.50:35357/v2.0
+admin_tenant_name = service
+admin_password = openstack1
+auth_protocol = http
+admin_user = neutron
+[database]
+connection = mysql://neutron_dbu:openstack1@192.168.2.50/neutron" | sudo tee -a ${NEUTRON_CONF}
+
+
+ML2_CONF=/etc/neutron/plugins/ml2/ml2_conf.ini
+echo "
+[ml2]
+type_drivers = gre
+tenant_network_types = gre
+mechanism_drivers = openvswitch
+[ml2_type_gre]
+tunnel_id_ranges = 1:1000
+[ovs]
+local_ip = 192.168.2.51
+tunnel_type = gre
+enable_tunneling = True
+[securitygroup]
+firewall_driver = neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver
+enable_security_group = True" | sudo tee -a ${ML2_CONF}
+
+sudo service neutron-plugin-openvswitch-agent restart
+
+
+L3_CONF=/etc/neutron/l3_agent.ini
+echo "
+[DEFAULT]
+interface_driver = neutron.agent.linux.interface.OVSInterfaceDriver
+use_namespaces = True
+verbose = True" | sudo tee -a ${L3_CONF}
+
+sudo service neutron-l3-agent restart
+
+DHCP_CONF=/etc/neutron/dhcp_agent.ini
+echo "
+[DEFAULT]
+interface_driver = neutron.agent.linux.interface.OVSInterfaceDriver
+dhcp_driver = neutron.agent.linux.dhcp.Dnsmasq
+use_namespaces = True" | sudo tee -a ${DHCP_CONF}
+
+sudo service neutron-dhcp-agent restart
+
+
+METADATA_CONF=/etc/neutron/metadata_agent.ini
+echo "
+[DEFAULT]
+auth_url =  http://10.33.2.50:35357/v2.0
+auth_region = RegionOne
+admin_tenant_name = service
+admin_password = openstack1
+auth_protocol = http
+admin_user = neutron
+nova_metadata_ip = 192.168.2.50
+metadata_proxy_shared_secret = openstack1" | sudo tee -a ${METADATA_CONF}
+
+sudo service neutron-metadata-agent restart
