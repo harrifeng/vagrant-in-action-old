@@ -142,3 +142,19 @@ SUBNET_ID=$(neutron subnet-list | awk '/172/ {print $2}')
 ROUTER_ID=$(neutron router-list | awk '/ADMIN_ROUTER/ {print $2}')
 
 neutron router-interface-add ${ROUTER_ID} ${SUBNET_ID}
+
+# create external network
+neutron net-create PUBLIC_NETWORK --router:external=True
+
+# create external subnet
+neutron subnet-create \
+        --gateway 192.168.12.1 \
+        --allocation-pool start=192.168.12.100,end=192.168.12.250 \
+        PUBLIC_NETWORK \
+        192.168.12.0/24 \
+        --enable_dhcp=False
+
+SUBNET_192_ID=$(neutron subnet-list | awk '/192/ {print $2}')
+NET_ID=$(neutron net-list | awk '/PUBLIC_NETWORK/ {print $2}')
+
+neutron router-gateway-set ${ROUTER_ID} ${NET_ID}
