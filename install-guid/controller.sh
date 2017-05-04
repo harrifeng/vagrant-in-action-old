@@ -58,7 +58,28 @@ sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON keystone.* TO 'keysto
 sudo apt-get install -y keystone
 
 KEYSTONE_CONF=/etc/keystone/keystone.conf
-sudo sed -i "s#^connection.*#connection=mysql+pymysql://keystone:welcome@controller/keystone#" ${KEYSTONE_CONF}
-# sudo sed -i 's/^#admin_token.*/admin_token = ADMIN/' ${KEYSTONE_CONF}
-# sudo sed -i 's,^#log_dir.*,log_dir = /var/log/keystone,' ${KEYSTONE_CONF}
-# sudo service keystone restart
+echo "
+connection=mysql+pymysql://keystone:welcome@controller/keystone# ${KEYSTONE_CONF}
+provider = fernet" | sudo tee -a /etc/mysql/mariadb.conf.d/99-openstack.cnf
+
+sudo  /bin/sh -c "keystone-manage db_sync" keystone
+sudo keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+sudo keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
+
+sudo keystone-manage bootstrap --bootstrap-password welcome \
+                --bootstrap-admin-url http://controller:35357/v3/ \
+                --bootstrap-internal-url http://controller:5000/v3/ \
+                --bootstrap-public-url http://controller:5000/v3/ \
+                --bootstrap-region-id RegionOne
+
+echo "ServerName controller" | sudo tee -a /etc/apache2/apache2.conf
+sudo service apache2 restart
+sudo rm -f /var/lib/keystone/keystone.db
+
+export OS_USERNAME=admin
+export OS_PASSWORD=welcome
+export OS_PROJECT_NAME=admin
+export OS_USER_DOMAIN_NAME=Default
+export OS_PROJECT_DOMAIN_NAME=Default
+export OS_AUTH_URL=http://controller:35357/v3
+export OS_IDENTITY_API_VERSION=3
