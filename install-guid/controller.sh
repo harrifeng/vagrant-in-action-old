@@ -16,4 +16,5 @@ echo "
 10.0.0.52 object2" | sudo tee -a /etc/hosts
 
 # NTP implementation Chrony
+echo '----------------------------'
 sudo apt-get install -y chrony
