@@ -1,3 +1,4 @@
+# Add the etc host
 echo "
 # controller
 10.0.0.11  controller
@@ -13,3 +14,6 @@ echo "
 
 # object2
 10.0.0.52 object2" | sudo tee -a /etc/hosts
+
+# NTP implementation Chrony
+sudo apt-get install -y chrony
