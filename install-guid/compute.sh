@@ -19,9 +19,8 @@ echo "
 echo '----------------------------'
 sudo apt-get install -y chrony
 
-
 echo "
-allow 10.0.0.0/24
+server controller iburst
 " | sudo tee -a /etc/chrony/chrony.conf
 
 sudo service chrony restart
