@@ -142,24 +142,21 @@ sudo apt-get install -y glance
 
 CONF_GLANCE_API=/etc/glance/glance-api.conf
 sudo sed -i "s|#connection = <None>|connection = mysql+pymysql://glance:welcome@controller/glance|g" ${CONF_GLANCE_API}
-sudo sed -i "s|#auth_uri = <None>|auth_uri = http://controller:5000\nauth_uri = http://controller:35357|g" ${CONF_GLANCE_API}
+sudo sed -i "s|#auth_uri = <None>|auth_uri = http://controller:5000\nauth_url = http://controller:35357|g" ${CONF_GLANCE_API}
 sudo sed -i "s|#memcached_servers = <None>|controller:11211|g" ${CONF_GLANCE_API}
 sudo sed -i "s|#auth_type = <None>|auth_type = password\nproject_domain_name=default\nuser_domain_name = default\nproject_name = service\nusername = glance\npassword = welcome|g" ${CONF_GLANCE_API}
 sudo sed -i "s|#flavor = keystone|flavor = keystone|g" ${CONF_GLANCE_API}
 sudo sed -i "s|#stores = file,http|stores = file,http|g" ${CONF_GLANCE_API}
 sudo sed -i "s|#default_store = file|default_store = file|g" ${CONF_GLANCE_API}
-sudo sed -i "s|#filesystem_store_datadir = /var/lib/glance/images|filesystem_store_datadir = /var/lib/glance/images|g" ${CONF_GLANCE_API}
+sudo sed -i "s|#filesystem_store_datadir = /var/lib/glance/images|filesystem_store_datadir = /var/lib/glance/images/|g" ${CONF_GLANCE_API}
 
 
 CONF_GLANCE_REG=/etc/glance/glance-registry.conf
 sudo sed -i "s|#connection = <None>|connection = mysql+pymysql://glance:welcome@controller/glance|g" ${CONF_GLANCE_REG}
-sudo sed -i "s|#auth_uri = <None>|auth_uri = http://controller:5000\nauth_uri = http://controller:35357|g" ${CONF_GLANCE_REG}
+sudo sed -i "s|#auth_uri = <None>|auth_uri = http://controller:5000\nauth_url = http://controller:35357|g" ${CONF_GLANCE_REG}
 sudo sed -i "s|#memcached_servers = <None>|controller:11211|g" ${CONF_GLANCE_REG}
 sudo sed -i "s|#auth_type = <None>|auth_type = password\nproject_domain_name=default\nuser_domain_name = default\nproject_name = service\nusername = glance\npassword = welcome|g" ${CONF_GLANCE_REG}
 sudo sed -i "s|#flavor = keystone|flavor = keystone|g" ${CONF_GLANCE_REG}
-sudo sed -i "s|#stores = file,http|stores = file,http|g" ${CONF_GLANCE_REG}
-sudo sed -i "s|#default_store = file|default_store = file|g" ${CONF_GLANCE_REG}
-sudo sed -i "s|#filesystem_store_datadir = /var/lib/glance/images|filesystem_store_datadir = /var/lib/glance/images|g" ${CONF_GLANCE_REG}
 
 sudo /bin/sh -c "glance-manage db_sync" glance
 sudo service glance-registry restart
