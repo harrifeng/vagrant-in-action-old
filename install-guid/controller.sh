@@ -164,3 +164,16 @@ sudo service glance-api restart
 
 openstack image create "cirros" --file cirros-0.3.5-x86_64-disk.img --disk-format qcow2 --container-format bare --public
 openstack image list
+
+# nova
+sudo mysql -uroot -h localhost -e "CREATE DATABASE nova"
+sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' IDENTIFIED BY 'welcome';"
+sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'%' IDENTIFIED BY 'welcome';"
+
+sudo mysql -uroot -h localhost -e "CREATE DATABASE nova_api"
+sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova_api.* TO 'nova'@'localhost' IDENTIFIED BY 'welcome';"
+sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova_api.* TO 'nova'@'%' IDENTIFIED BY 'welcome';"
+
+sudo mysql -uroot -h localhost -e "CREATE DATABASE nova_cell0"
+sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova_cell0.* TO 'nova'@'localhost' IDENTIFIED BY 'welcome';"
+sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova_cell0.* TO 'nova'@'%' IDENTIFIED BY 'welcome';"
