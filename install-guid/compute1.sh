@@ -56,3 +56,42 @@ openstack endpoint create --region RegionOne placement internal http://controlle
 openstack endpoint create --region RegionOne placement admin http://controller/  placement
 
 sudo apt-get install -y nova-api nova-conductor nova-consoleauth nova-novncproxy nova-scheduler nova-placement-api
+
+
+CONF_NOVA=/etc/nova/nova.conf
+sudo sed -i "s|connection=sqlite:////var/lib/nova/nova.sqlite|connection = mysql+pymysql://nova:welcome@controller/nova|g" ${CONF_NOVA}
+sudo sed -i "s|#connection=<None>|connection = mysql+pymysql://nova:welcome@controller/nova|g" ${CONF_NOVA}
+sudo sed -i "s|#transport_url=<None>|#transport_url = rabbit://openstack:welcome@controller/nova|g" ${CONF_NOVA}
+sudo sed -i "s|#auth_strategy=keystone|auth_strategy=keystone|g" ${CONF_NOVA}
+
+sudo sed -i "s|#auth_uri = <None>|auth_uri = http://controller:5000\nauth_url = http://controller:35357|g" ${CONF_NOVA}
+sudo sed -i "s|#memcached_servers = <None>|controller:11211|g" ${CONF_NOVA}
+sudo sed -i "s|#auth_type = <None>|auth_type = password\nproject_domain_name=default\nuser_domain_name = default\nproject_name = service\nusername = glance\npassword = welcome|g" ${CONF_NOVA}
+sudo sed -i "s|^#my_ip.*|my_ip = 10.0.0.11|g" ${CONF_NOVA}
+sudo sed -i "s|#use_neutron=true|use_neutron=true|g" ${CONF_NOVA}
+sudo sed -i "s|#firewall_driver=<None>|firewall_driver=nova.virt.firewall.NoopFirewallDriver|g" ${CONF_NOVA}
+sudo sed -i "s|#vncserver_listen=127.0.0.1|vncserver_listen=10.0.0.11|g" ${CONF_NOVA}
+sudo sed -i "s|#vncserver_proxyclient_address=127.0.0.1|vncserver_proxyclient_address=10.0.0.11|g" ${CONF_NOVA}
+sudo sed -i "s|#api_servers=<None>|#api_servers= http://controller:9292|g" ${CONF_NOVA}
+sudo sed -i "s|lock_path=/var/lock/nova|lock_path=/var/lock/nova/tmp|g" ${CONF_NOVA}
+sudo sed -i "s|^os_region_name.*|os_region_name = RegionOne|g" ${CONF_NOVA}
+sudo sed -i "s|#project_domain_name=<None>|project_domain_name=Default|g" ${CONF_NOVA}
+sudo sed -i "s|#project_name=<None>|project_name=Default|g" ${CONF_NOVA}
+sudo sed -i "s|#auth_type=<None>|auth_type=password|g" ${CONF_NOVA}
+sudo sed -i "s|#user_domain_name=<None>|user_domain_name=Default|g" ${CONF_NOVA}
+sudo sed -i "s|#auth_url=<None>|auth_url=http://controller:35357/v3|g" ${CONF_NOVA}
+sudo sed -i "s|#username =|username = placement|g" ${CONF_NOVA}
+sudo sed -i "s|#password =|password = welcome|g" ${CONF_NOVA}
+
+sudo /bin/sh -c "nova-manage api_db sync" nova
+sudo /bin/sh -c "nova-manage cell_v2 map_cell0" nova
+
+sudo /bin/sh -c "nova-manage cell_v2 create_cell --name=cell 1 --verbose" nova 109e1d4b-536a-40d0-83c6-5f121b82b650
+sudo /bin/sh -c "nova-manage db sync" nova
+sudo nova-manage cell_v2 list_cells
+
+sudo service nova-api restart
+sudo service nova-consoleauth restart
+sudo service nova-scheduler restart
+sudo service nova-conductor restart
+sudo service nova-novncproxy restart
