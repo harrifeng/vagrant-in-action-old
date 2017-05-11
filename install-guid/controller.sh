@@ -40,7 +40,7 @@ sudo service chrony restart
 sudo apt-get install -y software-properties-common
 sudo add-apt-repository -y cloud-archive:ocata
 
-sudo apt update
+sudo apt-get update
 sudo apt-get install -y python-openstackclient
 sudo apt-get install -y mariadb-server python-pymysql
 
