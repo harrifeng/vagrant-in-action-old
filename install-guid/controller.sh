@@ -211,7 +211,7 @@ sudo apt-get install -y nova-api nova-conductor nova-consoleauth nova-novncproxy
 CONF_NOVA=/etc/nova/nova.conf
 sudo sed -i "s|connection=sqlite:////var/lib/nova/nova.sqlite|connection = mysql+pymysql://nova:welcome@controller/nova|g" ${CONF_NOVA}
 sudo sed -i "s|#connection=<None>|connection = mysql+pymysql://nova:welcome@controller/nova|g" ${CONF_NOVA}
-sudo sed -i "s|#transport_url=<None>|#transport_url = rabbit://openstack:welcome@controller/nova|g" ${CONF_NOVA}
+sudo sed -i "s|#transport_url=<None>|transport_url = rabbit://openstack:welcome@controller/nova|g" ${CONF_NOVA}
 sudo sed -i "s|#auth_strategy=keystone|auth_strategy=keystone|g" ${CONF_NOVA}
 
 sudo sed -i "s|#auth_uri = <None>|auth_uri = http://controller:5000\nauth_url = http://controller:35357|g" ${CONF_NOVA}
@@ -222,7 +222,7 @@ sudo sed -i "s|#use_neutron=true|use_neutron=true|g" ${CONF_NOVA}
 sudo sed -i "s|#firewall_driver=<None>|firewall_driver=nova.virt.firewall.NoopFirewallDriver|g" ${CONF_NOVA}
 sudo sed -i "s|#vncserver_listen=127.0.0.1|vncserver_listen=10.0.0.11|g" ${CONF_NOVA}
 sudo sed -i "s|#vncserver_proxyclient_address=127.0.0.1|vncserver_proxyclient_address=10.0.0.11|g" ${CONF_NOVA}
-sudo sed -i "s|#api_servers=<None>|#api_servers= http://controller:9292|g" ${CONF_NOVA}
+sudo sed -i "s|#api_servers=<None>|api_servers= http://controller:9292|g" ${CONF_NOVA}
 sudo sed -i "s|lock_path=/var/lock/nova|lock_path=/var/lock/nova/tmp|g" ${CONF_NOVA}
 sudo sed -i "s|^os_region_name.*|os_region_name = RegionOne|g" ${CONF_NOVA}
 sudo sed -i "s|#project_domain_name=<None>|project_domain_name=Default|g" ${CONF_NOVA}
