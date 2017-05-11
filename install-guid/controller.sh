@@ -75,7 +75,7 @@ sudo apt-get install -y keystone
 sudo sed -i "s|#connection = <None>|connection = mysql+pymysql://keystone:welcome@controller/keystone|g" /etc/keystone/keystone.conf
 sudo sed -i "s|#provider = fernet|provider = fernet|g" /etc/keystone/keystone.conf
 
-sudo /bin/sh -c "keystone-manage db_sync" keystone
+sudo su -s /bin/sh -c "keystone-manage db_sync" keystone
 sudo keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
 sudo keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
 
@@ -158,7 +158,7 @@ sudo sed -i "s|#memcached_servers = <None>|controller:11211|g" ${CONF_GLANCE_REG
 sudo sed -i "s|#auth_type = <None>|auth_type = password\nproject_domain_name=default\nuser_domain_name = default\nproject_name = service\nusername = glance\npassword = welcome|g" ${CONF_GLANCE_REG}
 sudo sed -i "s|#flavor = keystone|flavor = keystone|g" ${CONF_GLANCE_REG}
 
-sudo /bin/sh -c "glance-manage db_sync" glance
+sudo su -s /bin/sh -c "glance-manage db_sync" glance
 sudo service glance-registry restart
 sudo service glance-api restart
 
@@ -233,11 +233,11 @@ sudo sed -i "s|#auth_url=<None>|auth_url=http://controller:35357/v3|g" ${CONF_NO
 sudo sed -i "s|#username =|username = placement|g" ${CONF_NOVA}
 sudo sed -i "s|#password =|password = welcome|g" ${CONF_NOVA}
 
-sudo /bin/sh -c "nova-manage api_db sync" nova
-sudo /bin/sh -c "nova-manage cell_v2 map_cell0" nova
+sudo -s /bin/sh -c "nova-manage api_db sync" nova
+sudo -s /bin/sh -c "nova-manage cell_v2 map_cell0" nova
 
-sudo /bin/sh -c "nova-manage cell_v2 create_cell --name=cell1 --verbose" nova
-sudo /bin/sh -c "nova-manage db sync" nova
+sudo -s /bin/sh -c "nova-manage cell_v2 create_cell --name=cell1 --verbose" nova
+sudo -s /bin/sh -c "nova-manage db sync" nova
 sudo nova-manage cell_v2 list_cells
 
 sudo service nova-api restart
