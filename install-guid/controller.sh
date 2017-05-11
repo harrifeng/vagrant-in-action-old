@@ -238,10 +238,10 @@ sudo su -s /bin/sh -c "nova-manage cell_v2 map_cell0" nova
 
 sudo su -s /bin/sh -c "nova-manage cell_v2 create_cell --name=cell1 --verbose" nova
 sudo su -s /bin/sh -c "nova-manage db sync" nova
-# sudo nova-manage cell_v2 list_cells
-#
-# sudo service nova-api restart
-# sudo service nova-consoleauth restart
-# sudo service nova-scheduler restart
-# sudo service nova-conductor restart
-# sudo service nova-novncproxy restart
+sudo nova-manage cell_v2 list_cells
+
+sudo service nova-api restart
+sudo service nova-consoleauth restart
+sudo service nova-scheduler restart
+sudo service nova-conductor restart
+sudo service nova-novncproxy restart
