@@ -201,9 +201,9 @@ openstack endpoint create --region RegionOne compute admin http://controller:877
 openstack user create --domain default --password welcome placement
 openstack role add --project service --user placement admin
 openstack service create --name placement --description "Placement API" placement
-openstack endpoint create --region RegionOne placement public http://controller/  placement
-openstack endpoint create --region RegionOne placement internal http://controller/ placement
-openstack endpoint create --region RegionOne placement admin http://controller/  placement
+openstack endpoint create --region RegionOne placement public http://controller/placement
+openstack endpoint create --region RegionOne placement internal http://controller/placement
+openstack endpoint create --region RegionOne placement admin http://controller/placement
 
 # Install and configure components (page 40)
 sudo apt-get install -y nova-api nova-conductor nova-consoleauth nova-novncproxy nova-scheduler nova-placement-api
