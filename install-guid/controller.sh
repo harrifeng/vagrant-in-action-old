@@ -209,9 +209,9 @@ openstack endpoint create --region RegionOne placement admin http://controller/p
 sudo apt-get install -y nova-api nova-conductor nova-consoleauth nova-novncproxy nova-scheduler nova-placement-api
 
 CONF_NOVA=/etc/nova/nova.conf
-sudo sed -i "s|connection=sqlite:////var/lib/nova/nova.sqlite|connection = mysql+pymysql://nova:welcome@controller/nova|g" ${CONF_NOVA}
+sudo sed -i "s|connection=sqlite:////var/lib/nova/nova.sqlite|connection = mysql+pymysql://nova:welcome@controller/nova-api|g" ${CONF_NOVA}
 sudo sed -i "s|#connection=<None>|connection = mysql+pymysql://nova:welcome@controller/nova|g" ${CONF_NOVA}
-sudo sed -i "s|#transport_url=<None>|transport_url = rabbit://openstack:welcome@controller/nova|g" ${CONF_NOVA}
+sudo sed -i "s|#transport_url=<None>|transport_url = rabbit://openstack:welcome@controller|g" ${CONF_NOVA}
 sudo sed -i "s|#auth_strategy=keystone|auth_strategy=keystone|g" ${CONF_NOVA}
 
 sudo sed -i "s|#auth_uri = <None>|auth_uri = http://controller:5000\nauth_url = http://controller:35357|g" ${CONF_NOVA}
@@ -233,15 +233,15 @@ sudo sed -i "s|#auth_url=<None>|auth_url=http://controller:35357/v3|g" ${CONF_NO
 sudo sed -i "s|#username =|username = placement|g" ${CONF_NOVA}
 sudo sed -i "s|#password =|password = welcome|g" ${CONF_NOVA}
 
-sudo -s /bin/sh -c "nova-manage api_db sync" nova
-sudo -s /bin/sh -c "nova-manage cell_v2 map_cell0" nova
+sudo su -s /bin/sh -c "nova-manage api_db sync" nova
+sudo su -s /bin/sh -c "nova-manage cell_v2 map_cell0" nova
 
-sudo -s /bin/sh -c "nova-manage cell_v2 create_cell --name=cell1 --verbose" nova
-sudo -s /bin/sh -c "nova-manage db sync" nova
-sudo nova-manage cell_v2 list_cells
-
-sudo service nova-api restart
-sudo service nova-consoleauth restart
-sudo service nova-scheduler restart
-sudo service nova-conductor restart
-sudo service nova-novncproxy restart
+sudo su -s /bin/sh -c "nova-manage cell_v2 create_cell --name=cell1 --verbose" nova
+sudo su -s /bin/sh -c "nova-manage db sync" nova
+# sudo nova-manage cell_v2 list_cells
+#
+# sudo service nova-api restart
+# sudo service nova-consoleauth restart
+# sudo service nova-scheduler restart
+# sudo service nova-conductor restart
+# sudo service nova-novncproxy restart
