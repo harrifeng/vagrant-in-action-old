@@ -236,7 +236,7 @@ sudo sed -i "s|#password =|password = welcome|g" ${CONF_NOVA}
 sudo /bin/sh -c "nova-manage api_db sync" nova
 sudo /bin/sh -c "nova-manage cell_v2 map_cell0" nova
 
-sudo /bin/sh -c "nova-manage cell_v2 create_cell --name=cell 1 --verbose" nova 109e1d4b-536a-40d0-83c6-5f121b82b650
+sudo /bin/sh -c "nova-manage cell_v2 create_cell --name=cell1 --verbose" nova 109e1d4b-536a-40d0-83c6-5f121b82b650
 sudo /bin/sh -c "nova-manage db sync" nova
 sudo nova-manage cell_v2 list_cells
 
