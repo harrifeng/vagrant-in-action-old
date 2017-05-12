@@ -40,9 +40,9 @@ CONF_CHRONY=/etc/chrony/chrony.conf
 
 echo "
 server 0.amazon.pool.ntp.org iburst
+allow 10.0.0.0/24
 " | sudo tee -a ${CONF_CHRONY}
 
-sed -i '/# Allow/a allow 10.0.0.0/24' ${CONF_CHRONY}
 sudo service chrony restart
 
 echo ${CONF_CHRONY} '------------------------------------------------------>>'
