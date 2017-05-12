@@ -49,6 +49,12 @@ echo ${CONF_CHRONY} '------------------------------------------------------>>'
 cat ${CONF_CHRONY}
 echo ${CONF_CHRONY} '------------------------------------------------------>>'
 
+# page 16
+echo 'Run > chronyc sources-----------------------------------'
+chronyc sources
+echo '--------------------------------------------------------'
+
+
 
 # sudo DEBIAN_FRONTEND=noninteractive apt-get -y install software-properties-common
 # sudo add-apt-repository -y cloud-archive:ocata

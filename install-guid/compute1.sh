@@ -9,6 +9,7 @@ deb-src http://mirrors.aliyun.com/ubuntu/ xenial-security main restricted univer
 deb-src http://mirrors.aliyun.com/ubuntu/ xenial-updates main restricted universe multiverse
 deb-src http://mirrors.aliyun.com/ubuntu/ xenial-proposed main restricted universe multiverse
 deb-src http://mirrors.aliyun.com/ubuntu/ xenial-backports main restricted universe multiverse" | sudo tee /etc/apt/sources.list
+sudo apt-get update
 
 # # page 12: [Set the hostname of the node to controller]
 echo "
@@ -44,6 +45,7 @@ echo ${CONF_CHRONY} '------------------------------------------------------>>'
 cat ${CONF_CHRONY}
 echo ${CONF_CHRONY} '------------------------------------------------------>>'
 
+# page 17
 echo 'Run > chronyc sources-----------------------------------'
 chronyc sources
 echo '--------------------------------------------------------'
