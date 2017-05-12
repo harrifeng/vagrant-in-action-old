@@ -50,6 +50,16 @@ echo 'Run > chronyc sources-----------------------------------'
 chronyc sources
 echo '--------------------------------------------------------'
 
+# page 17 Distributions release Openstack packages as part of the distribution or
+# using other methods because of differing release schedules.
+# Perform these procedures on all nodes.
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install software-properties-common
+sudo add-apt-repository -y cloud-archive:ocata
+
+sudo apt-get update
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install python-openstackclient
+
+
 # # sudo apt-get install -y software-properties-common
 # # sudo add-apt-repository -y cloud-archive:ocata
 # #

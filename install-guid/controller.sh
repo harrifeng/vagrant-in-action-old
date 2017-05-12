@@ -55,31 +55,48 @@ chronyc sources
 echo '--------------------------------------------------------'
 
 
+# page 17 Distributions release Openstack packages as part of the distribution or
+# using other methods because of differing release schedules.
+# Perform these procedures on all nodes.
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install software-properties-common
+sudo add-apt-repository -y cloud-archive:ocata
 
-# sudo DEBIAN_FRONTEND=noninteractive apt-get -y install software-properties-common
-# sudo add-apt-repository -y cloud-archive:ocata
+sudo apt-get update
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install python-openstackclient
+
+
+# The database typically runs on the controller node.
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install mariadb-server python-pymysql
+
+# page 18
+echo "
+[mysqld]
+bind-address = 10.0.0.11
+default-storage-engine = innodb
+innodb_file_per_table = on
+max_connections = 4096
+collation-server = utf8_general_ci
+character-set-server = utf8" | sudo tee -a /etc/mysql/mariadb.conf.d/99-openstack.cnf
+
+sudo service mysql restart
+echo 'install database------------------------------'
+sudo mysql -uroot -h localhost -e "SHOW DATABASES"
+echo '----------------------------------------------'
+
+# page 19: the message queue runs on the controller node.
 #
-# sudo apt-get update
-# sudo DEBIAN_FRONTEND=noninteractive apt-get -y install python-openstackclient mariadb-server python-pymysql
-#
-# echo "
-# [mysqld]
-# bind-address = 10.0.0.11
-# default-storage-engine = innodb
-# innodb_file_per_table = on
-# max_connections = 4096
-# collation-server = utf8_general_ci
-# character-set-server = utf8" | sudo tee -a /etc/mysql/mariadb.conf.d/99-openstack.cnf
-# sudo service mysql restart
-# sudo mysql -uroot -h localhost -e "SHOW DATABASES"
-#
-# sudo apt-get install -y rabbitmq-server
-# sudo rabbitmqctl add_user openstack welcome
-# sudo rabbitmqctl set_permissions openstack ".*" ".*" ".*"
-# sudo apt-get install -y memcached python-memcache
-#
-# sudo sed -i "s/-l 127.0.0.1/-l 10.0.0.11/g" /etc/memcached.conf
-# sudo service memcached restart
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install rabbitmq-server
+RABBIT_PASS=welcome
+sudo rabbitmqctl add_user openstack ${RABBIT_PASS}
+sudo rabbitmqctl set_permissions openstack ".*" ".*" ".*"
+
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install memcached python-memcache
+CONF_MEMCACHE=/etc/memcached.conf
+sudo sed -i "s/-l 127.0.0.1/-l 10.0.0.11/g" ${CONF_MEMCACHE}
+sudo service memcached restart
+echo ${CONF_MEMCACHE} '---------------------------------------'
+cat ${CONF_MEMCACHE}
+echo ${CONF_MEMCACHE} '---------------------------------------'
 #
 # sudo mysql -uroot -h localhost -e "CREATE DATABASE keystone"
 # sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'welcome';"
