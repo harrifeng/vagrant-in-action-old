@@ -155,22 +155,30 @@ echo 'test----------openstack urlj---------------'
 openstack project list
 echo '-------------------------------------------'
 
-# openstack project create --domain default --description "Service Project" service
-# openstack project create --domain default --description "Demo Project" demo
-# openstack user create --domain default --password welcome demo
-# openstack role create user
-# openstack role add --project demo --user demo user
-#
-# export OS_USERNAME=demo
-# export OS_PASSWORD=welcome
-# export OS_PROJECT_NAME=demo
-# export OS_USER_DOMAIN_NAME=Default
-# export OS_PROJECT_DOMAIN_NAME=Default
-# export OS_AUTH_URL=http://controller:5000/v3
-# export OS_IDENTITY_API_VERSION=3
-# export OS_IMAGE_API_VERSION=2
-#
-# openstack token issue
+# page 23: This guide uses a service project that contains a unique user for each service that
+# you add to your environment. Create the service project
+openstack project create --domain default --description "Service Project" service
+
+# Regular(non-admin) tasks should use an unprivileged project and user. As an example,
+# this guide create the demo project and user with following 4 steps
+
+# create demo project
+openstack project create --domain default --description "Demo Project" demo
+
+# create demo user
+openstack user create --domain default --password welcome demo
+
+# create user role
+openstack role create user
+
+# add role to the demo project and user
+openstack role add --project demo --user demo user
+
+echo 'test token issue-----------------------'
+openstack token issue
+echo '---------------------------------------'
+
+# page 26: Image service
 #
 # # glance
 # sudo mysql -uroot -h localhost -e "CREATE DATABASE glance"
