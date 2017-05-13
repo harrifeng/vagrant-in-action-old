@@ -210,9 +210,9 @@ sudo sed -i "/auth_uri = /a auth_url = http://controller:35357" ${CONF_GLANCE_AP
 sudo sed -i "s|#memcached_servers.*|memcached_servers = controller:11211|g" ${CONF_GLANCE_API}
 sudo sed -i "s|#auth_type.*|auth_type = password|g" ${CONF_GLANCE_API}
 sudo sed -i "/auth_type =/a project_domain_name=default \
-user_domain_name = default\
-project_name = service\
-username = glance\
+user_domain_name = default \
+project_name = service \
+username = glance \
 password = welcome" ${CONF_GLANCE_API}
 sudo sed -i "s|#flavor.*|flavor = keystone|g" ${CONF_GLANCE_API}
 sudo sed -i "s|#stores.*|stores = file,http|g" ${CONF_GLANCE_API}
@@ -231,10 +231,10 @@ sudo sed -i "/auth_uri/a auth_url = http://controller:35357" ${CONF_GLANCE_REG}
 
 sudo sed -i "s|#memcached_servers.*|memcached_servers=controller:11211|g" ${CONF_GLANCE_REG}
 sudo sed -i "s|#auth_type.*|auth_type = password|g" ${CONF_GLANCE_REG}
-sudo sed -i "/auth_type/a project_domain_name=default\
-user_domain_name = default\
-project_name = service\
-username = glance\
+sudo sed -i "/auth_type/a project_domain_name=default \
+user_domain_name = default \
+project_name = service \
+username = glance \
 password = welcome" ${CONF_GLANCE_REG}
 sudo sed -i "s|#flavor.*|flavor = keystone|g" ${CONF_GLANCE_REG}
 
