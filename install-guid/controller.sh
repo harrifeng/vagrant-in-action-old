@@ -1,3 +1,4 @@
+#!/bin/bash
 echo "
 deb http://mirrors.aliyun.com/ubuntu/ xenial main restricted universe multiverse
 deb http://mirrors.aliyun.com/ubuntu/ xenial-security main restricted universe multiverse
@@ -109,39 +110,51 @@ sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON keystone.* TO 'keysto
 sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'%' IDENTIFIED BY '${DB_PASS}';"
 echo '--------------end-------------mysql----------------------------'
 
-# sudo apt-get install -y keystone
-#
-# # try sed here
-#
-#
-# # we have to use `|` as seperator
-# sudo sed -i "s|#connection = <None>|connection = mysql+pymysql://keystone:welcome@controller/keystone|g" /etc/keystone/keystone.conf
-# sudo sed -i "s|#provider = fernet|provider = fernet|g" /etc/keystone/keystone.conf
-#
-# sudo su -s /bin/sh -c "keystone-manage db_sync" keystone
-# sudo keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
-# sudo keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
-#
-# sudo keystone-manage bootstrap --bootstrap-password welcome \
-#                 --bootstrap-admin-url http://controller:35357/v3/ \
-#                 --bootstrap-internal-url http://controller:5000/v3/ \
-#                 --bootstrap-public-url http://controller:5000/v3/ \
-#                 --bootstrap-region-id RegionOne
-#
-# echo "ServerName controller" | sudo tee -a /etc/apache2/apache2.conf
-# sudo service apache2 restart
-# sudo rm -f /var/lib/keystone/keystone.db
-#
-# export OS_USERNAME=admin
-# export OS_PASSWORD=welcome
-# export OS_PROJECT_NAME=admin
-# export OS_USER_DOMAIN_NAME=Default
-# export OS_PROJECT_DOMAIN_NAME=Default
-# export OS_AUTH_URL=http://controller:35357/v3
-# export OS_IDENTITY_API_VERSION=3
-# export OS_IMAGE_API_VERSION=2
-#
-# openstack project list
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install keystone
+
+# we have to use `|` as seperator
+DB_PASS=welcome
+CONF_KEYSTONE=/etc/keystone/keystone.conf
+sudo sed -i "s|#connection.*|connection = mysql+pymysql://keystone:${DB_PASS}@controller/keystone|g" ${CONF_KEYSTONE}
+sudo sed -i "s|#provider.*|provider = fernet|g" ${CONF_KEYSTONE}
+
+# page 22: Populate the Identity service database
+sudo su -s /bin/sh -c "keystone-manage db_sync" keystone
+
+echo ${CONF_KEYSTONE} '-----------------------'
+cat ${CONF_KEYSTONE}
+echo '----------------------------------------'
+
+# Initialize Fernet key repositories:
+sudo keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+sudo keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
+
+ADMIN_PASS=welcome
+sudo keystone-manage bootstrap --bootstrap-password ${ADMIN_PASS} \
+                --bootstrap-admin-url http://controller:35357/v3/ \
+                --bootstrap-internal-url http://controller:5000/v3/ \
+                --bootstrap-public-url http://controller:5000/v3/ \
+                --bootstrap-region-id RegionOne
+
+# Configure the Apache HTTP server page 22
+echo "ServerName controller" | sudo tee -a /etc/apache2/apache2.conf
+# Restart the Apache service and remove the default SQLite database
+sudo service apache2 restart
+sudo rm -f /var/lib/keystone/keystone.db
+
+export OS_USERNAME=admin
+export OS_PASSWORD=${ADMIN_PASS}
+export OS_PROJECT_NAME=admin
+export OS_USER_DOMAIN_NAME=Default
+export OS_PROJECT_DOMAIN_NAME=Default
+export OS_AUTH_URL=http://controller:35357/v3
+export OS_IDENTITY_API_VERSION=3
+export OS_IMAGE_API_VERSION=2
+
+echo 'test----------openstack urlj---------------'
+openstack project list
+echo '-------------------------------------------'
+
 # openstack project create --domain default --description "Service Project" service
 # openstack project create --domain default --description "Demo Project" demo
 # openstack user create --domain default --password welcome demo
