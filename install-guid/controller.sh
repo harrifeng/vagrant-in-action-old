@@ -97,10 +97,18 @@ sudo service memcached restart
 echo ${CONF_MEMCACHE} '---------------------------------------'
 cat ${CONF_MEMCACHE}
 echo ${CONF_MEMCACHE} '---------------------------------------'
-#
-# sudo mysql -uroot -h localhost -e "CREATE DATABASE keystone"
-# sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'welcome';"
-# sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'%' IDENTIFIED BY 'welcome';"
+
+# Identity service page 20: A centralized server provides authentication and authorization
+# services using a RESTful interface
+
+# page 21
+echo '--------------start-----------mysql----------------------------'
+DB_PASS=welcome
+sudo mysql -uroot -h localhost -e "CREATE DATABASE keystone"
+sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY '${DB_PASS}';"
+sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'%' IDENTIFIED BY '${DB_PASS}';"
+echo '--------------end-------------mysql----------------------------'
+
 # sudo apt-get install -y keystone
 #
 # # try sed here
