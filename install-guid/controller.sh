@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 echo "
 deb http://mirrors.aliyun.com/ubuntu/ xenial main restricted universe multiverse
 deb http://mirrors.aliyun.com/ubuntu/ xenial-security main restricted universe multiverse
@@ -227,11 +227,11 @@ sudo sed -i "s|#auth_uri.*|auth_uri = http://controller:5000|g" ${CONF_GLANCE_AP
 sudo sed -i "/auth_uri = /a auth_url = http://controller:35357" ${CONF_GLANCE_API}
 sudo sed -i "s|#memcached_servers.*|memcached_servers = controller:11211|g" ${CONF_GLANCE_API}
 sudo sed -i "s|#auth_type.*|auth_type = password|g" ${CONF_GLANCE_API}
-sudo sed -i "/auth_type =/a project_domain_name=default \n
-user_domain_name = default \n
-project_name = service \n
-username = glance \n
-password = welcome" ${CONF_GLANCE_API}
+sudo sed -i "/auth_type/a project_domain_name=default" ${CONF_GLANCE_REG}
+sudo sed -i "/auth_type/a user_domain_name = default" ${CONF_GLANCE_REG}
+sudo sed -i "/auth_type/a project_name = service" ${CONF_GLANCE_REG}
+sudo sed -i "/auth_type/a username = glance" ${CONF_GLANCE_REG}
+sudo sed -i "/auth_type/a password = welcome" ${CONF_GLANCE_REG}
 sudo sed -i "s|#flavor.*|flavor = keystone|g" ${CONF_GLANCE_API}
 sudo sed -i "s|#stores.*|stores = file,http|g" ${CONF_GLANCE_API}
 sudo sed -i "s|#default_store.*|default_store = file|g" ${CONF_GLANCE_API}
@@ -253,11 +253,11 @@ sudo sed -i "/auth_uri/a auth_url = http://controller:35357" ${CONF_GLANCE_REG}
 
 sudo sed -i "s|#memcached_servers.*|memcached_servers=controller:11211|g" ${CONF_GLANCE_REG}
 sudo sed -i "s|#auth_type.*|auth_type = password|g" ${CONF_GLANCE_REG}
-sudo sed -i "/auth_type/a project_domain_name=default \n
-user_domain_name = default \n
-project_name = service \n
-username = glance \n
-password = welcome" ${CONF_GLANCE_REG}
+sudo sed -i "/auth_type/a project_domain_name=default" ${CONF_GLANCE_REG}
+sudo sed -i "/auth_type/a user_domain_name = default" ${CONF_GLANCE_REG}
+sudo sed -i "/auth_type/a project_name = service" ${CONF_GLANCE_REG}
+sudo sed -i "/auth_type/a username = glance" ${CONF_GLANCE_REG}
+sudo sed -i "/auth_type/a password = welcome" ${CONF_GLANCE_REG}
 sudo sed -i "s|#flavor.*|flavor = keystone|g" ${CONF_GLANCE_REG}
 
 echo '----------------------------------------------------------------------->>'
@@ -267,22 +267,22 @@ cat ${CONF_GLANCE_REG}
 echo '-----------------------------------------------------------------------<<'
 echo ${CONF_GLANCE_REG}
 echo '-----------------------------------------------------------------------<<'
-
-echo '-------------------------------------------------------------------------'
-echo '>sudo su -s /bin/sh -c "glance-manage db_sync" glance'
-echo 'Note: Ignore any deprecation messages in this output.'
-echo '-------------------------------------------------------------------------'
-sudo su -s /bin/sh -c "glance-manage db_sync" glance
-sudo service glance-registry restart
-sudo service glance-api restart
-
-echo '-------------------------------------------------------------------------'
-# page 31 : Verify operation
-openstack image create "cirros" --file /vagrant/cirros-0.3.5-x86_64-disk.img --disk-format qcow2 --container-format bare --public
-echo '-------------------------------------------------------------------------'
-echo 'openstack image list'
-echo '-------------------------------------------------------------------------'
-openstack image list
+#
+# echo '-------------------------------------------------------------------------'
+# echo '>sudo su -s /bin/sh -c "glance-manage db_sync" glance'
+# echo 'Note: Ignore any deprecation messages in this output.'
+# echo '-------------------------------------------------------------------------'
+# sudo su -s /bin/sh -c "glance-manage db_sync" glance
+# sudo service glance-registry restart
+# sudo service glance-api restart
+#
+# echo '-------------------------------------------------------------------------'
+# # page 31 : Verify operation
+# openstack image create "cirros" --file /vagrant/cirros-0.3.5-x86_64-disk.img --disk-format qcow2 --container-format bare --public
+# echo '-------------------------------------------------------------------------'
+# echo 'openstack image list'
+# echo '-------------------------------------------------------------------------'
+# openstack image list
 
 #
 # # Install and configure controller node
