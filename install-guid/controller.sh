@@ -180,51 +180,71 @@ echo '---------------------------------------'
 
 # page 26: Image service
 #
-# # glance
-# sudo mysql -uroot -h localhost -e "CREATE DATABASE glance"
-# sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' IDENTIFIED BY 'welcome';"
-# sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'%' IDENTIFIED BY 'welcome';"
-#
-#
-# export OS_USERNAME=admin
-# export OS_PASSWORD=welcome
-# export OS_PROJECT_NAME=admin
-# export OS_USER_DOMAIN_NAME=Default
-# export OS_PROJECT_DOMAIN_NAME=Default
-# export OS_AUTH_URL=http://controller:35357/v3
-# export OS_IDENTITY_API_VERSION=3
-# export OS_IMAGE_API_VERSION=2
-#
-# openstack user create --domain default --password welcome glance
-# openstack role add --project service --user glance admin
-# openstack service create --name glance  --description "OpenStack Image" image
-# openstack endpoint create --region RegionOne image public http://controller:9292
-# openstack endpoint create --region RegionOne image internal http://controller:9292
-# openstack endpoint create --region RegionOne image admin http://controller:9292
-#
-# sudo apt-get install -y glance
-#
-# CONF_GLANCE_API=/etc/glance/glance-api.conf
-# sudo sed -i "s|#connection = <None>|connection = mysql+pymysql://glance:welcome@controller/glance|g" ${CONF_GLANCE_API}
-# sudo sed -i "s|#auth_uri = <None>|auth_uri = http://controller:5000\nauth_url = http://controller:35357|g" ${CONF_GLANCE_API}
-# sudo sed -i "s|#memcached_servers = <None>|controller:11211|g" ${CONF_GLANCE_API}
-# sudo sed -i "s|#auth_type = <None>|auth_type = password\nproject_domain_name=default\nuser_domain_name = default\nproject_name = service\nusername = glance\npassword = welcome|g" ${CONF_GLANCE_API}
-# sudo sed -i "s|#flavor = keystone|flavor = keystone|g" ${CONF_GLANCE_API}
-# sudo sed -i "s|#stores = file,http|stores = file,http|g" ${CONF_GLANCE_API}
-# sudo sed -i "s|#default_store = file|default_store = file|g" ${CONF_GLANCE_API}
-# sudo sed -i "s|#filesystem_store_datadir = /var/lib/glance/images|filesystem_store_datadir = /var/lib/glance/images/|g" ${CONF_GLANCE_API}
-#
-#
-# CONF_GLANCE_REG=/etc/glance/glance-registry.conf
-# sudo sed -i "s|#connection = <None>|connection = mysql+pymysql://glance:welcome@controller/glance|g" ${CONF_GLANCE_REG}
-# sudo sed -i "s|#auth_uri = <None>|auth_uri = http://controller:5000\nauth_url = http://controller:35357|g" ${CONF_GLANCE_REG}
-# sudo sed -i "s|#memcached_servers = <None>|controller:11211|g" ${CONF_GLANCE_REG}
-# sudo sed -i "s|#auth_type = <None>|auth_type = password\nproject_domain_name=default\nuser_domain_name = default\nproject_name = service\nusername = glance\npassword = welcome|g" ${CONF_GLANCE_REG}
-# sudo sed -i "s|#flavor = keystone|flavor = keystone|g" ${CONF_GLANCE_REG}
-#
-# sudo su -s /bin/sh -c "glance-manage db_sync" glance
-# sudo service glance-registry restart
-# sudo service glance-api restart
+# glance
+DB_PASS=welcome
+sudo mysql -uroot -h localhost -e "CREATE DATABASE glance"
+sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' IDENTIFIED BY '${DB_PASS}';"
+sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'%' IDENTIFIED BY '${DB_PASS}';"
+
+# page 28: To create the service credentials, complete following steps
+
+# 1.create glance user
+openstack user create --domain default --password welcome glance
+# 2.Add the admin role to the glance user and service project
+openstack role add --project service --user glance admin
+# 3.create the glance service entity
+openstack service create --name glance  --description "OpenStack Image" image
+
+# Create the Image service API endpoints
+openstack endpoint create --region RegionOne image public http://controller:9292
+openstack endpoint create --region RegionOne image internal http://controller:9292
+openstack endpoint create --region RegionOne image admin http://controller:9292
+
+# Install packages page 30
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install glance
+
+CONF_GLANCE_API=/etc/glance/glance-api.conf
+sudo sed -i "s|#connection.*|connection = mysql+pymysql://glance:${DB_PASS}@controller/glance|g" ${CONF_GLANCE_API}
+sudo sed -i "s|#auth_uri.*|auth_uri = http://controller:5000|g" ${CONF_GLANCE_API}
+sudo sed -i "/auth_uri = /a auth_url = http://controller:35357" ${CONF_GLANCE_API}
+sudo sed -i "s|#memcached_servers.*|memcached_servers = controller:11211|g" ${CONF_GLANCE_API}
+sudo sed -i "s|#auth_type.*|auth_type = password|g" ${CONF_GLANCE_API}
+sudo sed -i "/auth_type =/a project_domain_name=default \
+user_domain_name = default\
+project_name = service\
+username = glance\
+password = welcome" ${CONF_GLANCE_API}
+sudo sed -i "s|#flavor.*|flavor = keystone|g" ${CONF_GLANCE_API}
+sudo sed -i "s|#stores.*|stores = file,http|g" ${CONF_GLANCE_API}
+sudo sed -i "s|#default_store.*|default_store = file|g" ${CONF_GLANCE_API}
+sudo sed -i "s|#filesystem_store_datadir.*|filesystem_store_datadir = /var/lib/glance/images/|g" ${CONF_GLANCE_API}
+
+
+echo ${CONF_GLANCE_API} '--------------------------'
+cat ${CONF_GLANCE_API}
+echo '---------------------------------------------'
+
+CONF_GLANCE_REG=/etc/glance/glance-registry.conf
+sudo sed -i "s|#connection.*|connection = mysql+pymysql://glance:${DB_PASS}@controller/glance|g" ${CONF_GLANCE_REG}
+sudo sed -i "s|#auth_uri.*|auth_uri = http://controller:5000|g" ${CONF_GLANCE_REG}
+sudo sed -i "/auth_uri/a auth_url = http://controller:35357" ${CONF_GLANCE_REG}
+
+sudo sed -i "s|#memcached_servers.*|memcached_servers=controller:11211|g" ${CONF_GLANCE_REG}
+sudo sed -i "s|#auth_type.*|auth_type = password|g" ${CONF_GLANCE_REG}
+sudo sed -i "/auth_type/a project_domain_name=default\
+user_domain_name = default\
+project_name = service\
+username = glance\
+password = welcome" ${CONF_GLANCE_REG}
+sudo sed -i "s|#flavor.*|flavor = keystone|g" ${CONF_GLANCE_REG}
+
+echo ${CONF_GLANCE_REG} '--------------------------'
+cat ${CONF_GLANCE_REG}
+echo '---------------------------------------------'
+
+sudo su -s /bin/sh -c "glance-manage db_sync" glance
+sudo service glance-registry restart
+sudo service glance-api restart
 #
 # openstack image create "cirros" --file cirros-0.3.5-x86_64-disk.img --disk-format qcow2 --container-format bare --public
 # openstack image list
@@ -234,16 +254,16 @@ echo '---------------------------------------'
 #
 # # Prerequisites (page 34)
 # sudo mysql -uroot -h localhost -e "CREATE DATABASE nova"
-# sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' IDENTIFIED BY 'welcome';"
-# sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'%' IDENTIFIED BY 'welcome';"
+# sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' IDENTIFIED BY '${DB_PASS}';"
+# sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'%' IDENTIFIED BY '${DB_PASS}';"
 #
 # sudo mysql -uroot -h localhost -e "CREATE DATABASE nova_api"
-# sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova_api.* TO 'nova'@'localhost' IDENTIFIED BY 'welcome';"
-# sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova_api.* TO 'nova'@'%' IDENTIFIED BY 'welcome';"
+# sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova_api.* TO 'nova'@'localhost' IDENTIFIED BY '${DB_PASS}';"
+# sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova_api.* TO 'nova'@'%' IDENTIFIED BY '${DB_PASS}';"
 #
 # sudo mysql -uroot -h localhost -e "CREATE DATABASE nova_cell0"
-# sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova_cell0.* TO 'nova'@'localhost' IDENTIFIED BY 'welcome';"
-# sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova_cell0.* TO 'nova'@'%' IDENTIFIED BY 'welcome';"
+# sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova_cell0.* TO 'nova'@'localhost' IDENTIFIED BY '${DB_PASS}';"
+# sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova_cell0.* TO 'nova'@'%' IDENTIFIED BY '${DB_PASS}';"
 #
 # # page 35
 # export OS_USERNAME=admin
