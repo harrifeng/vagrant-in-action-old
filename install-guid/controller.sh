@@ -273,9 +273,23 @@ echo '>sudo su -s /bin/sh -c "glance-manage db_sync" glance'
 echo 'Note: Ignore any deprecation messages in this output.'
 echo '-------------------------------------------------------------------------'
 sudo su -s /bin/sh -c "glance-manage db_sync" glance
+
+echo '-------------------------------------------------------------------------'
+echo '> sudo service glance-registry restart'
+echo '-------------------------------------------------------------------------'
 sudo service glance-registry restart
+echo '-------------------------------------------------------------------------'
+echo '> sudo service glance-api restart'
+echo '-------------------------------------------------------------------------'
 sudo service glance-api restart
 
+echo '-------------------------------------------------------------------------'
+echo 'sleep for 5 seconds'
+echo '-------------------------------------------------------------------------'
+sleep 5s
+
+echo '-------------------------------------------------------------------------'
+echo '> openstack image create'
 echo '-------------------------------------------------------------------------'
 # page 31 : Verify operation
 openstack image create "cirros" --file /vagrant/cirros-0.3.5-x86_64-disk.img --disk-format qcow2 --container-format bare --public
