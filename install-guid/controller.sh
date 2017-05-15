@@ -306,7 +306,7 @@ openstack image list
 
 # page 34 This section describes how to install and configure the Compute service,
 # code-named nova, on the controller node.
-
+#
 DB_PASS=welcome
 sudo mysql -uroot -h localhost -e "CREATE DATABASE nova"
 sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' IDENTIFIED BY '${DB_PASS}';"
@@ -351,81 +351,82 @@ openstack endpoint create --region RegionOne placement internal http://controlle
 openstack endpoint create --region RegionOne placement admin http://controller/placement
 
 # page 38: Install and configure components (page 40)
-sudo apt-get install -y nova-api nova-conductor nova-consoleauth nova-novncproxy nova-scheduler nova-placement-api
-
-CONF_NOVA=/etc/nova/nova.conf
-sudo sed -i "/[api_database]/a connection = mysql+pymysql://nova:welcome@controller/nova_api" ${CONF_NOVA}
-sudo sed -i "/[database]/a connection = mysql+pymysql://nova:welcome@controller/nova" ${CONF_NOVA}
-sudo sed -i "/[DEFAULT]/a transport_url = rabbit://openstack:welcome@controller" ${CONF_NOVA}
-sudo sed -i "/[api]/a auth_strategy=keystone" ${CONF_NOVA}
-sudo sed -i "/[keystone_authtoken]/a auth_uri = http://controller:5000" ${CONF_NOVA}
-sudo sed -i "/[keystone_authtoken]/a auth_url = http://controller:35357" ${CONF_NOVA}
-sudo sed -i "/[keystone_authtoken]/a memcached_servers = controller:11211" ${CONF_NOVA}
-sudo sed -i "/[keystone_authtoken]/a auth_type = password" ${CONF_NOVA}
-sudo sed -i "/[keystone_authtoken]/a project_domain_name = default" ${CONF_NOVA}
-sudo sed -i "/[keystone_authtoken]/a user_domain_name = default" ${CONF_NOVA}
-sudo sed -i "/[keystone_authtoken]/a project_name = service" ${CONF_NOVA}
-sudo sed -i "/[keystone_authtoken]/a username = nova" ${CONF_NOVA}
-sudo sed -i "/[keystone_authtoken]/a password = welcome" ${CONF_NOVA}
-sudo sed -i "/[DEFAULT]/a my_ip = 10.0.0.11" ${CONF_NOVA}
-sudo sed -i "/[DEFAULT]/a use_neutron = True" ${CONF_NOVA}
-sudo sed -i "/[DEFAULT]/a firewall_driver=nova.virt.firewall.NoopFirewallDriver" ${CONF_NOVA}
-sudo sed -i "/[vnc]/a enabled = true" ${CONF_NOVA}
-sudo sed -i "/[vnc]/a vncserver_listen = 10.0.0.11" ${CONF_NOVA}
-sudo sed -i "/[vnc]/a vncserver_proxyclient_address = 10.0.0.11" ${CONF_NOVA}
-sudo sed -i "/[glance]/a api_servers = http://controller:9292" ${CONF_NOVA}
-sudo sed -i "/[oslo_concurrency]/a lock_path=/var/lock/nova/tmp" ${CONF_NOVA}
-
-# page 40 Due to a packaging bug, remove the log_dir option from the [DEFAULT] section
-sudo sed -i "/[placement]/a os_region_name = RegionOne             " ${CONF_NOVA}
-sudo sed -i "/[placement]/a project_domain_name = Default          " ${CONF_NOVA}
-sudo sed -i "/[placement]/a project_name = service                 " ${CONF_NOVA}
-sudo sed -i "/[placement]/a auth_type = password                   " ${CONF_NOVA}
-sudo sed -i "/[placement]/a user_domain_name = Default             " ${CONF_NOVA}
-sudo sed -i "/[placement]/a auth_url = http://controller:35357/v3  " ${CONF_NOVA}
-sudo sed -i "/[placement]/a username = placement                   " ${CONF_NOVA}
-sudo sed -i "/[placement]/a password = welcome                     " ${CONF_NOVA}
-
-echo '----------------------------------------------------------------------->>'
-echo ${CONF_NOVA}
-echo '----------------------------------------------------------------------->>'
-cat ${CONF_NOVA}
-echo '-----------------------------------------------------------------------<<'
-echo ${CONF_NOVA}
-echo '-----------------------------------------------------------------------<<'
-
-echo '-------------------------------------------------------------------------'
-echo '> sudo su -s /bin/sh -c "nova-manage api_db sync" nova'
-echo '-------------------------------------------------------------------------'
-sudo su -s /bin/sh -c "nova-manage api_db sync" nova
-
-echo '-------------------------------------------------------------------------'
-echo '> sudo su -s /bin/sh -c "nova-manage cell_v2 map_cell0" nova'
-echo '-------------------------------------------------------------------------'
-sudo su -s /bin/sh -c "nova-manage cell_v2 map_cell0" nova
-
-echo '-------------------------------------------------------------------------'
-echo '> sudo su -s /bin/sh -c "nova-manage cell_v2 create_cell --name=cell1 --verbose" nova'
-echo '-------------------------------------------------------------------------'
-sudo su -s /bin/sh -c "nova-manage cell_v2 create_cell --name=cell1 --verbose" nova
-
-echo '-------------------------------------------------------------------------'
-echo '> sudo su -s /bin/sh -c "nova-manage db sync" nova'
-echo '-------------------------------------------------------------------------'
-
-# page 40 : Register the cell0
-echo '-------------------------------------------------------------------------'
-echo '> sudo su -s /bin/sh -c "nova-manage db sync" nova'
-echo '-------------------------------------------------------------------------'
-sudo su -s /bin/sh -c "nova-manage db sync" nova
-
-echo '-------------------------------------------------------------------------'
-echo '> sudo nova-manage cell_v2 list_cells'
-echo '-------------------------------------------------------------------------'
-sudo nova-manage cell_v2 list_cells
-
-sudo service nova-api restart
-sudo service nova-consoleauth restart
-sudo service nova-scheduler restart
-sudo service nova-conductor restart
-sudo service nova-novncproxy restart
+# sudo apt-get install -y nova-api nova-conductor nova-consoleauth nova-novncproxy nova-scheduler nova-placement-api
+#
+# CONF_NOVA=/etc/nova/nova.conf
+# sudo sed -i "s|connection=sqlite:////var/lib/nova/nova.sqlite||g" ${CONF_NOVA}
+# sudo sed -i "/[api_database]/a connection = mysql+pymysql://nova:welcome@controller/nova_api" ${CONF_NOVA}
+# sudo sed -i "/[database]/a connection = mysql+pymysql://nova:welcome@controller/nova" ${CONF_NOVA}
+# sudo sed -i "/[DEFAULT]/a transport_url = rabbit://openstack:welcome@controller" ${CONF_NOVA}
+# sudo sed -i "/[api]/a auth_strategy=keystone" ${CONF_NOVA}
+# sudo sed -i "/[keystone_authtoken]/a auth_uri = http://controller:5000" ${CONF_NOVA}
+# sudo sed -i "/[keystone_authtoken]/a auth_url = http://controller:35357" ${CONF_NOVA}
+# sudo sed -i "/[keystone_authtoken]/a memcached_servers = controller:11211" ${CONF_NOVA}
+# sudo sed -i "/[keystone_authtoken]/a auth_type = password" ${CONF_NOVA}
+# sudo sed -i "/[keystone_authtoken]/a project_domain_name = default" ${CONF_NOVA}
+# sudo sed -i "/[keystone_authtoken]/a user_domain_name = default" ${CONF_NOVA}
+# sudo sed -i "/[keystone_authtoken]/a project_name = service" ${CONF_NOVA}
+# sudo sed -i "/[keystone_authtoken]/a username = nova" ${CONF_NOVA}
+# sudo sed -i "/[keystone_authtoken]/a password = welcome" ${CONF_NOVA}
+# sudo sed -i "/[DEFAULT]/a my_ip = 10.0.0.11" ${CONF_NOVA}
+# sudo sed -i "/[DEFAULT]/a use_neutron = True" ${CONF_NOVA}
+# sudo sed -i "/[DEFAULT]/a firewall_driver=nova.virt.firewall.NoopFirewallDriver" ${CONF_NOVA}
+# sudo sed -i "/[vnc]/a enabled = true" ${CONF_NOVA}
+# sudo sed -i "/[vnc]/a vncserver_listen = 10.0.0.11" ${CONF_NOVA}
+# sudo sed -i "/[vnc]/a vncserver_proxyclient_address = 10.0.0.11" ${CONF_NOVA}
+# sudo sed -i "/[glance]/a api_servers = http://controller:9292" ${CONF_NOVA}
+# sudo sed -i "/[oslo_concurrency]/a lock_path=/var/lock/nova/tmp" ${CONF_NOVA}
+#
+# # page 40 Due to a packaging bug, remove the log_dir option from the [DEFAULT] section
+# sudo sed -i "/[placement]/a os_region_name = RegionOne             " ${CONF_NOVA}
+# sudo sed -i "/[placement]/a project_domain_name = Default          " ${CONF_NOVA}
+# sudo sed -i "/[placement]/a project_name = service                 " ${CONF_NOVA}
+# sudo sed -i "/[placement]/a auth_type = password                   " ${CONF_NOVA}
+# sudo sed -i "/[placement]/a user_domain_name = Default             " ${CONF_NOVA}
+# sudo sed -i "/[placement]/a auth_url = http://controller:35357/v3  " ${CONF_NOVA}
+# sudo sed -i "/[placement]/a username = placement                   " ${CONF_NOVA}
+# sudo sed -i "/[placement]/a password = welcome                     " ${CONF_NOVA}
+#
+# echo '----------------------------------------------------------------------->>'
+# echo ${CONF_NOVA}
+# echo '----------------------------------------------------------------------->>'
+# cat ${CONF_NOVA}
+# echo '-----------------------------------------------------------------------<<'
+# echo ${CONF_NOVA}
+# echo '-----------------------------------------------------------------------<<'
+#
+# echo '-------------------------------------------------------------------------'
+# echo '> sudo su -s /bin/sh -c "nova-manage api_db sync" nova'
+# echo '-------------------------------------------------------------------------'
+# sudo su -s /bin/sh -c "nova-manage api_db sync" nova
+#
+# echo '-------------------------------------------------------------------------'
+# echo '> sudo su -s /bin/sh -c "nova-manage cell_v2 map_cell0" nova'
+# echo '-------------------------------------------------------------------------'
+# sudo su -s /bin/sh -c "nova-manage cell_v2 map_cell0" nova
+#
+# echo '-------------------------------------------------------------------------'
+# echo '> sudo su -s /bin/sh -c "nova-manage cell_v2 create_cell --name=cell1 --verbose" nova'
+# echo '-------------------------------------------------------------------------'
+# sudo su -s /bin/sh -c "nova-manage cell_v2 create_cell --name=cell1 --verbose" nova
+#
+# echo '-------------------------------------------------------------------------'
+# echo '> sudo su -s /bin/sh -c "nova-manage db sync" nova'
+# echo '-------------------------------------------------------------------------'
+#
+# # page 40 : Register the cell0
+# echo '-------------------------------------------------------------------------'
+# echo '> sudo su -s /bin/sh -c "nova-manage db sync" nova'
+# echo '-------------------------------------------------------------------------'
+# sudo su -s /bin/sh -c "nova-manage db sync" nova
+#
+# echo '-------------------------------------------------------------------------'
+# echo '> sudo nova-manage cell_v2 list_cells'
+# echo '-------------------------------------------------------------------------'
+# sudo nova-manage cell_v2 list_cells
+#
+# sudo service nova-api restart
+# sudo service nova-consoleauth restart
+# sudo service nova-scheduler restart
+# sudo service nova-conductor restart
+# sudo service nova-novncproxy restart
