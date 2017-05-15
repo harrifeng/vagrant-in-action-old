@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 echo "
 deb http://mirrors.aliyun.com/ubuntu/ xenial main restricted universe multiverse
 deb http://mirrors.aliyun.com/ubuntu/ xenial-security main restricted universe multiverse
