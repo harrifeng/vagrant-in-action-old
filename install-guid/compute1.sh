@@ -98,5 +98,44 @@ sudo service nova-compute restart
 echo '-------------------------------------------------------------------------'
 echo 'log'
 echo '-------------------------------------------------------------------------'
-
 sudo cat /var/log/nova/nova-compute.log
+
+# page 59: Install and configure compute node
+# The compute node handles connectivity and security groups for instances
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install neutron-linuxbridge-agent
+
+CONF_NEUTRON=/etc/neutron/neutron.conf
+sudo sed -i "/\[DEFAULT\]$/a transport_url = rabbit://openstack:welcome@controller" ${CONF_NEUTRON}
+sudo sed -i "/\[DEFAULT\]$/a auth_strategy=keystone" ${CONF_NEUTRON}
+sudo sed -i "/\[keystone_authtoken\]$/a auth_uri = http://controller:5000" ${CONF_NEUTRON}
+sudo sed -i "/\[keystone_authtoken\]$/a auth_url = http://controller:35357" ${CONF_NEUTRON}
+sudo sed -i "/\[keystone_authtoken\]$/a memcached_servers = controller:11211" ${CONF_NEUTRON}
+sudo sed -i "/\[keystone_authtoken\]$/a auth_type = password" ${CONF_NEUTRON}
+sudo sed -i "/\[keystone_authtoken\]$/a project_domain_name = default" ${CONF_NEUTRON}
+sudo sed -i "/\[keystone_authtoken\]$/a user_domain_name = default" ${CONF_NEUTRON}
+sudo sed -i "/\[keystone_authtoken\]$/a project_name = service" ${CONF_NEUTRON}
+sudo sed -i "/\[keystone_authtoken\]$/a username = neutron" ${CONF_NEUTRON}
+sudo sed -i "/\[keystone_authtoken\]$/a password = welcome" ${CONF_NEUTRON}
+
+# page 58: configure the networking components on a compute node
+CONF_LINUXBRIDGE=/etc/neutron/plugins/ml2/linuxbridge_agent.ini
+sudo sed -i "/\[linux_bridge\]$/a physical_interface_mappings = provider:NAT" ${CONF_LINUXBRIDGE}
+sudo sed -i "/\[vxlan\]$/a enable_vxlan = false" ${CONF_LINUXBRIDGE}
+sudo sed -i "/\[securitygroup\]$/a enable_security_group = true" ${CONF_LINUXBRIDGE}
+sudo sed -i "/\[securitygroup\]$/a firewall_driver = neutron.agent.linux.iptables_firewall.IptablesFirewallDriver" ${CONF_LINUXBRIDGE}
+
+
+# page 61:
+CONF_NOVA=/etc/nova/nova.conf
+sudo sed -i "/\[neutron\]$/a url = http://controller:9696       " ${CONF_NOVA}
+sudo sed -i "/\[neutron\]$/a auth_url = http://controller:35357 " ${CONF_NOVA}
+sudo sed -i "/\[neutron\]$/a auth_type = password               " ${CONF_NOVA}
+sudo sed -i "/\[neutron\]$/a project_domain_name = default      " ${CONF_NOVA}
+sudo sed -i "/\[neutron\]$/a user_domain_name = default         " ${CONF_NOVA}
+sudo sed -i "/\[neutron\]$/a region_name = RegionOne            " ${CONF_NOVA}
+sudo sed -i "/\[neutron\]$/a project_name = service             " ${CONF_NOVA}
+sudo sed -i "/\[neutron\]$/a username = neutron                 " ${CONF_NOVA}
+sudo sed -i "/\[neutron\]$/a password = welcome                 " ${CONF_NOVA}
+
+service nova-compute restart
+service neutron-linuxbridge-agent restart

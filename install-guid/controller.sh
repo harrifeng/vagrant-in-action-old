@@ -387,6 +387,11 @@ sudo sed -i "/\[placement\]$/a auth_url = http://controller:35357/v3  " ${CONF_N
 sudo sed -i "/\[placement\]$/a username = placement                   " ${CONF_NOVA}
 sudo sed -i "/\[placement\]$/a password = welcome                     " ${CONF_NOVA}
 
+
+# page 44: When you add new compute nodes, you must run nova-manage cell_v2 discover_hosts
+# on the controller node to register those new compute nodes. Alternatively, you can set
+# an appropriate interval in /etc/nova/nova.conf
+sudo sed -i "/\[scheduler\]$/a discover_hosts_in_cells_interval = 300 " ${CONF_NOVA}
 echo '----------------------------------------------------------------------->>'
 echo ${CONF_NOVA}
 echo '----------------------------------------------------------------------->>'
@@ -431,3 +436,96 @@ sudo service nova-consoleauth restart
 sudo service nova-scheduler restart
 sudo service nova-conductor restart
 sudo service nova-novncproxy restart
+
+# page 47: Networking (neutron) concepts
+# Install and configure controller node
+
+DB_PASS=welcome
+sudo mysql -uroot -h localhost -e "CREATE DATABASE neutron"
+sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'localhost' IDENTIFIED BY '${DB_PASS}';"
+sudo mysql -uroot -h localhost -e "GRANT ALL PRIVILEGES ON neutron.* TO 'neutron'@'%' IDENTIFIED BY '${DB_PASS}';"
+
+openstack user create --domain default --password welcome neutron
+openstack role add --project service --user neutron admin
+openstack service create --name neutron --description "OpenStack Networking" network
+openstack endpoint create --region RegionOne network public http://controller:9696
+openstack endpoint create --region RegionOne network internal http://controller:9696
+openstack endpoint create --region RegionOne network admin http://controller:9696
+
+# page 50: Networking Option 1: Provider networks
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install neutron-server neutron-plugin-ml2  neutron-linuxbridge-agent neutron-dhcp-agent  neutron-metadata-agent
+
+CONF_NEUTRON=/etc/neutron/neutron.conf
+sudo sed -i "/\[database\]$/a connection = mysql+pymysql://neutron:welcome@controller/neutron" ${CONF_NEUTRON}
+sudo sed -i "/\[DEFAULT\]$/a core_plugin = ml2" ${CONF_NEUTRON}
+sudo sed -i "/\[DEFAULT\]$/a service_plugins = " ${CONF_NEUTRON}
+sudo sed -i "/\[DEFAULT\]$/a transport_url = rabbit://openstack:welcome@controller " ${CONF_NEUTRON}
+sudo sed -i "/\[DEFAULT\]$/a auth_strategy=keystone" ${CONF_NEUTRON}
+sudo sed -i "/\[keystone_authtoken\]$/a auth_uri = http://controller:5000" ${CONF_NEUTRON}
+sudo sed -i "/\[keystone_authtoken\]$/a auth_url = http://controller:35357" ${CONF_NEUTRON}
+sudo sed -i "/\[keystone_authtoken\]$/a memcached_servers = controller:11211" ${CONF_NEUTRON}
+sudo sed -i "/\[keystone_authtoken\]$/a auth_type = password" ${CONF_NEUTRON}
+sudo sed -i "/\[keystone_authtoken\]$/a project_domain_name = default" ${CONF_NEUTRON}
+sudo sed -i "/\[keystone_authtoken\]$/a user_domain_name = default" ${CONF_NEUTRON}
+sudo sed -i "/\[keystone_authtoken\]$/a project_name = service" ${CONF_NEUTRON}
+sudo sed -i "/\[keystone_authtoken\]$/a username = neutron" ${CONF_NEUTRON}
+sudo sed -i "/\[keystone_authtoken\]$/a password = welcome" ${CONF_NEUTRON}
+# page 51: configure Networking to notify Compute of network topology changes
+sudo sed -i "/\[DEFAULT\]$/a notify_nova_on_port_status_changes = true" ${CONF_NEUTRON}
+sudo sed -i "/\[DEFAULT\]$/a notify_nova_on_port_data_changes = true" ${CONF_NEUTRON}
+
+sudo sed -i "/\[nova\]$/a auth_url = http://controller:35357" ${CONF_NEUTRON}
+sudo sed -i "/\[nova\]$/a auth_type = password" ${CONF_NEUTRON}
+sudo sed -i "/\[nova\]$/a project_domain_name = default" ${CONF_NEUTRON}
+sudo sed -i "/\[nova\]$/a user_domain_name = default" ${CONF_NEUTRON}
+sudo sed -i "/\[nova\]$/a region_name = RegionOne" ${CONF_NEUTRON}
+sudo sed -i "/\[nova\]$/a project_name = service" ${CONF_NEUTRON}
+sudo sed -i "/\[nova\]$/a username = nova" ${CONF_NEUTRON}
+sudo sed -i "/\[nova\]$/a password = welcome" ${CONF_NEUTRON}
+
+# page 52: Configure the Modular Layer 2 (ML2) plug-in
+CONF_ML2=/etc/neutron/plugins/ml2/ml2_conf.ini
+sudo sed -i "/\[ml2\]$/a type_drivers = flat,vlan" ${CONF_ML2}
+sudo sed -i "/\[ml2\]$/a tenant_network_types = " ${CONF_ML2}
+sudo sed -i "/\[ml2\]$/a mechanism_drivers = linuxbridge" ${CONF_ML2}
+sudo sed -i "/\[ml2\]$/a extension_drivers = port_security" ${CONF_ML2}
+sudo sed -i "/\[ml2_type_flat\]$/a flat_networks = provider" ${CONF_ML2}
+sudo sed -i "/\[ml2_type_flat\]$/a enable_ipset = true" ${CONF_ML2}
+
+CONF_LINUXBRIDGE=/etc/neutron/plugins/ml2/linuxbridge_agent.ini
+sudo sed -i "/\[linux_bridge\]$/a physical_interface_mappings = provider:NAT" ${CONF_LINUXBRIDGE}
+sudo sed -i "/\[vxlan\]$/a enable_vxlan = false" ${CONF_LINUXBRIDGE}
+sudo sed -i "/\[securitygroup\]$/a enable_security_group = true" ${CONF_LINUXBRIDGE}
+sudo sed -i "/\[securitygroup\]$/a firewall_driver = neutron.agent.linux.iptables_firewall.IptablesFirewallDriver" ${CONF_LINUXBRIDGE}
+
+# page 53: Configure the DHCP agent
+CONF_DHCP=/etc/neutron/dhcp_agent.ini
+sudo sed -i "/\[DEFAULT\]$/a interface_driver = linuxbridge" ${CONF_DHCP}
+sudo sed -i "/\[DEFAULT\]$/a dhcp_driver = neutron.agent.linux.dhcp.Dnsmasq" ${CONF_DHCP}
+sudo sed -i "/\[DEFAULT\]$/a enable_isolated_metadata = true " ${CONF_DHCP}
+
+# page 58:
+CONF_META_AGENT=/etc/neutron/metadata_agent.ini
+sudo sed -i "/\[DEFAULT\]$/a nova_metadata_ip = controller" ${CONF_META_AGENT}
+sudo sed -i "/\[DEFAULT\]$/a metadata_proxy_shared_secret = METADATA_SECRET" ${CONF_META_AGENT}
+
+CONF_NOVA=/etc/nova/nova.conf
+sudo sed -i "/\[neutron\]$/a url = http://controller:9696           "  ${CONF_NOVA}
+sudo sed -i "/\[neutron\]$/a auth_url = http://controller:35357     "  ${CONF_NOVA}
+sudo sed -i "/\[neutron\]$/a auth_type = password                   "  ${CONF_NOVA}
+sudo sed -i "/\[neutron\]$/a project_domain_name = default          "  ${CONF_NOVA}
+sudo sed -i "/\[neutron\]$/a user_domain_name = default             "  ${CONF_NOVA}
+sudo sed -i "/\[neutron\]$/a region_name = RegionOne                "  ${CONF_NOVA}
+sudo sed -i "/\[neutron\]$/a project_name = service                 "  ${CONF_NOVA}
+sudo sed -i "/\[neutron\]$/a username = neutron                     "  ${CONF_NOVA}
+sudo sed -i "/\[neutron\]$/a password = welcome                     "  ${CONF_NOVA}
+sudo sed -i "/\[neutron\]$/a service_metadata_proxy = true          "  ${CONF_NOVA}
+sudo sed -i "/\[neutron\]$/a metadata_proxy_shared_secret = welcome "  ${CONF_NOVA}
+
+sudo su -s /bin/sh -c "neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head" neutron
+sudo service nova-api restart
+
+sudo service neutron-server restart
+sudo service neutron-linuxbridge-agent restart
+sudo service neutron-dhcp-agent restart
+sudo service neutron-metadata-agent restart
